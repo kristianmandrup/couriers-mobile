@@ -1,0 +1,44 @@
+h1. Tiramizoo Courier App
+
+h2. Infrastructure components
+
+"Pusher":http://pusherapp.com/docs/quickstart  
+"Pusher gem":https://github.com/newbamboo/pusher-gem
+
+<pre>
+app_id =  '3618'
+key =     'c7317ad04a36f754b00a'
+secret =  '5aae9b153d8625f6198f'  
+
+
+
+</pre>
+
+<script src="http://js.pusherapp.com/1.6/pusher.min.js"></script>
+
+<pre>
+  var pusher = new Pusher('API_KEY');
+  var myChannel = pusher.subscribe('COURIER_CHANNEL');
+  
+  myChannel.bind('thing-create', function(thing) {
+    alert('A thing was created: ' + thing.name);
+  });    
+</pre>
+
+<pre>
+  require 'pusher'
+
+  Pusher.app_id = '3618'
+  Pusher.key = 'c7317ad04a36f754b00a'
+  Pusher.secret = '5aae9b153d8625f6198f'
+
+  class ThingsController < ApplicationController
+    def create
+      @thing = Thing.new(params[:thing])
+
+      if @thing.save
+        Pusher['things'].trigger('thing-create', @thing.attributes)
+      end
+    end
+  end  
+</pre>
