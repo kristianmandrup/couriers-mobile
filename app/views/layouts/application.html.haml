@@ -1,0 +1,23 @@
+!!! 5
+%html{:lang => "en"}
+  %head
+    %meta{:charset => "utf-8"}
+    %title= "Tiramizoo - " + (yield(:title) || "Home")
+    = stylesheet_link_tag "jquery.mobile-1.0a2.min", "application"
+    = javascript_include_tag "jquery/jquery", "application", "jquery/jquery.mobile-1.0a2.min"
+    = csrf_meta_tag
+    %body
+      %div{"data-role" => "page"}
+        %div{"data-role" => "header"}
+          %h1 Tiramizoo
+        %div{"data-role" => "content"}
+          = yield
+        %div{"data-role" => "footer"}
+          %div{"data-role" => "navbar", "data-type" => "horizontal"}
+            %ul
+              %li
+                %a{:href => ""} Map
+              %li
+                %a{:href => "", :class => "ui-btn-active"} Deliver
+              %li
+                %a{:href => ""} Settings

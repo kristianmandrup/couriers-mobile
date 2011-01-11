@@ -1,4 +1,19 @@
 TiramizooCourierApp::Application.routes.draw do
+
+  root :to => "application#index"
+
+  namespace "delivery" do
+    match "/" => "state#index"
+    match "/accept" => "state#accept"
+    match "/pickup" => "state#pickup"
+    match "/go" => "state#go"
+    match "/deliver" => "state#deliver"
+    match "/edit-charge" => "state#edit_charge"
+    match "/bill" => "state#bill"
+  end
+
+  resource :settings, :only => [:show, :edit, :update]
+
   # The priority is based upon order of creation:
   # first created -> highest priority.
 

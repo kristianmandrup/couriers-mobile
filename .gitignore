@@ -1,4 +1,7 @@
 .bundle
+.idea
+.rakeTasks
+*.iml
 db/*.sqlite3
 log/*.log
 tmp/**/*
