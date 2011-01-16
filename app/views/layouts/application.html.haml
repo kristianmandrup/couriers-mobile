@@ -3,9 +3,9 @@
   %head
     %meta{:charset => "utf-8"}
       %title= "Tiramizoo - " + (yield(:title) || "Home")
-      = stylesheet_link_tag "jquery.mobile-1.0a2", "application", :cache => true
+      = stylesheet_link_tag "jquery.mobile-1.0a2", "application"
       = javascript_include_tag "http://pubnub-prod.appspot.com/js-api?pub-key=demo&sub-key=demo&origin=pubsub.pubnub.com&ssl=&java=&devmode=1"
-      = javascript_include_tag "jquery/jquery-1.4.4.min", "rails", "application", "jquery/jquery.mobile-1.0a2.min", :cache => true
+      = javascript_include_tag "jquery/jquery-1.4.4.min", "rails", "application", "jquery/jquery.mobile-1.0a2.min"
       = yield :meta
       = csrf_meta_tag
     %body
