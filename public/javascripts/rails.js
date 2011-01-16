@@ -92,6 +92,7 @@
 	}
 
 	$('a[data-confirm], a[data-method], a[data-remote]').live('click.rails', function(e) {
+        alert("click-rails");
 		var link = $(this);
 		if (!allowAction(link)) return false;
 

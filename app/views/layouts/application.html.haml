@@ -2,22 +2,17 @@
 %html{:lang => "en"}
   %head
     %meta{:charset => "utf-8"}
-    %title= "Tiramizoo - " + (yield(:title) || "Home")
-    = stylesheet_link_tag "jquery.mobile-1.0a2.min", "application"
-    = javascript_include_tag "jquery/jquery", "application", "jquery/jquery.mobile-1.0a2.min"
-    = csrf_meta_tag
+      %title= "Tiramizoo - " + (yield(:title) || "Home")
+      = stylesheet_link_tag "jquery.mobile-1.0a2", "application", :cache => true
+      = javascript_include_tag "http://pubnub-prod.appspot.com/js-api?pub-key=demo&sub-key=demo&origin=pubsub.pubnub.com&ssl=&java=&devmode=1"
+      = javascript_include_tag "jquery/jquery-1.4.4.min", "rails", "application", "jquery/jquery.mobile-1.0a2.min", :cache => true
+      = yield :meta
+      = csrf_meta_tag
     %body
-      %div{"data-role" => "page"}
-        %div{"data-role" => "header"}
-          %h1 Tiramizoo
-        %div{"data-role" => "content"}
+      %div{"data-role" => "page", "class" => "page"}
+        %div{"data-role" => "header", "data-position" => "inline"}
+          = yield :header
+        %div{"data-role" => "content", "class" => "page-content"}
           = yield
         %div{"data-role" => "footer"}
-          %div{"data-role" => "navbar", "data-type" => "horizontal"}
-            %ul
-              %li
-                %a{:href => ""} Map
-              %li
-                %a{:href => "", :class => "ui-btn-active"} Deliver
-              %li
-                %a{:href => ""} Settings
+          = yield :footer

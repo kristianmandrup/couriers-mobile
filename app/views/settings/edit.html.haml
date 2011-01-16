@@ -1,1 +1,45 @@
-Edit Settings
+- content_for :header do
+  %h1 Settings
+
+%form
+  %div{"data-role" => "fieldcontain"}
+    %label{"for" => "username"} Username:
+    %input{"type" => "text", "name" => "username", "id" => "username"}
+
+  %div{"data-role" => "fieldcontain"}
+    %label{"for" => "username"} Password:
+    %input{"type" => "text", "name" => "password", "id" => "password"}
+
+  %div{"data-role" => "fieldcontain"}
+    %label{"for" => "working_hours"} Working Hours:
+    %div{"class" => "form-control-group"}
+      %div{"class" => "ui-select-time-group", "data-role" => "controlgroup", "data-type" => "horizontal"}
+        %select{"name" => "working_hours_from_hours", "id" => "working_hours_from_hours", "data-input-type" => "time"}
+          %option{"value" => "8"} 8
+          %option{"value" => "9"} 9
+          %option{"value" => "10"} 10
+        %select{"name" => "working_hours_from_minutes", "id" => "working_hours_from_minutes", "data-input-type" => "time"}
+          %option{"value" => "0"} 0
+          %option{"value" => "5"} 5
+          %option{"value" => "10"} 10
+      %div{"class" => "ui-select-time-separator", "data-role" => "controlgroup", "data-type" => "horizontal"}
+        %a{"href" => "#", "data-role" => "button"} -
+      %div{"class" => "ui-select-time-group", "data-role" => "controlgroup", "data-type" => "horizontal"}
+        %select{"name" => "working_hours_to_hours", "id" => "working_hours_to_hours", "data-input-type" => "time"}
+          %option{"value" => "8"} 8
+          %option{"value" => "9"} 9
+          %option{"value" => "10"} 10
+        %select{"name" => "working_hours_to_minutes", "id" => "working_hours_to_minutes", "data-input-type" => "time"}
+          %option{"value" => "0"} 0
+          %option{"value" => "5"} 5
+          %option{"value" => "10"} 10
+
+  %div{"data-role" => "fieldcontain"}
+    %label{"for" => "working_hours"} Max. Delivery Distance (KM):
+    %input{"type" => "range", "name" => "working_hours", "id" => "working_hours", "value" => "0", "min" => "0", "max" => "200"}
+
+  %fielset{"class" => "ui-grid-a"}
+    %div{"class" => "ui-block-a"}
+      %a{"href" => "#", "data-role" => "button", "data-icon" => "minus"} Cancel
+    %div{"class" => "ui-block-b"}
+      %a{"href" => "#", "data-role" => "button", "data-icon" => "check"} Save
