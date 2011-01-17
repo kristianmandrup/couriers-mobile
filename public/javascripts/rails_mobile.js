@@ -31,10 +31,24 @@
 			data = null;
 		}
 
+        /* Jquery mobile additions:
+         * Use data-url attribute instead of action or href -
+         * otherwise jquery mobile would change the page to this action/href
+         * By using a custom data-url attribute redirection can be handled in the rails controller
+         * Also show and hide the mobile page loader in the ajax events
+        **/
+        var elementHasDataURL  = element.has("[data-url]");
+        if (elementHasDataURL) {
+            url = element.attr("data-url");
+        }
+
 		$.ajax({
 			url: url, type: method || 'GET', data: data, dataType: dataType,
 			// stopping the "ajax:beforeSend" event will cancel the ajax request
 			beforeSend: function(xhr, settings) {
+                if (elementHasDataURL) {
+                    $.mobile.pageLoading();
+                }
 				if (settings.dataType === undefined) {
 					xhr.setRequestHeader('accept', '*/*;q=0.5, ' + settings.accepts.script);
 				}
@@ -44,6 +58,9 @@
 				element.trigger('ajax:success', [data, status, xhr]);
 			},
 			complete: function(xhr, status) {
+                if (elementHasDataURL) {
+                    $.mobile.pageLoading(true);
+                }
 				element.trigger('ajax:complete', [xhr, status]);
 			},
 			error: function(xhr, status, error) {
@@ -92,7 +109,6 @@
 	}
 
 	$('a[data-confirm], a[data-method], a[data-remote]').live('click.rails', function(e) {
-        alert("click-rails");
 		var link = $(this);
 		if (!allowAction(link)) return false;
 

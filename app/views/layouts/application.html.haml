@@ -5,7 +5,7 @@
       %title= "Tiramizoo - " + (yield(:title) || "Home")
       = stylesheet_link_tag "jquery.mobile-1.0a2", "application"
       = javascript_include_tag "http://pubnub-prod.appspot.com/js-api?pub-key=demo&sub-key=demo&origin=pubsub.pubnub.com&ssl=&java=&devmode=1"
-      = javascript_include_tag "jquery/jquery-1.4.4.min", "rails", "application", "jquery/jquery.mobile-1.0a2.min"
+      = javascript_include_tag "jquery/jquery-1.4.4.min", "rails_mobile.js", "application", "jquery/jquery.mobile-1.0a2"
       = yield :meta
       = csrf_meta_tag
     %body
@@ -14,5 +14,5 @@
           = yield :header
         %div{"data-role" => "content", "class" => "page-content"}
           = yield
-        %div{"data-role" => "footer"}
+        %div{"data-role" => "footer", "data-position" => "fixed"}
           = yield :footer

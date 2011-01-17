@@ -40,6 +40,6 @@
 
   %fielset{"class" => "ui-grid-a"}
     %div{"class" => "ui-block-a"}
-      %a{"href" => "#", "data-role" => "button", "data-icon" => "minus"} Cancel
+      %a{"href" => "#", "data-back" => "true", "data-role" => "button", "data-icon" => "minus"} Cancel
     %div{"class" => "ui-block-b"}
-      %a{"href" => "#", "data-role" => "button", "data-icon" => "check"} Save
+      = link_to "save", "#", "data-role" => "button", "data-icon" => "check", "data-url" => settings_path, :remote => true, :method => :put

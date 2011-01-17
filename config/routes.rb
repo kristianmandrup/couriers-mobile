@@ -16,8 +16,8 @@ TiramizooCourierApp::Application.routes.draw do
   end
 
   match "delivery-list" => "delivery_list#index", :as => :deliveries
-  
-  resource :settings, :only => [:edit, :update]
+
+  resource :settings, :only => [:show, :edit, :update]
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

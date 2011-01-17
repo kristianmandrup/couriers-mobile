@@ -17,10 +17,7 @@ class CourierStatesController < ApplicationController
   end
 
   def update
-    respond_to do |format|
-      format.html { redirect_to root_path }
-      format.xml  { head :ok }
-    end
+    mobile_redirect_to root_path
   end
 
 end
