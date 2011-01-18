@@ -22,38 +22,66 @@ TIRAMIZOO.namespace = function (namespaceStr) {
 };
 
 /**
- * Controller with utility function for the map
+ * Object to encapsulate publish/subscribe behaviour
  */
-TIRAMIZOO.namespace("map.controller");
-TIRAMIZOO.map.controller = (function () {
-    return {
-        showDelivery: function () {
-            console.log("showDelivery");
-        }
+TIRAMIZOO.namespace("pubsub");
+TIRAMIZOO.pubsub = (function (pubSubService) {
+    publish = function(options) {
+        pubSubService.publish({
+            channel: options.channel,
+            message: JSON.stringify({action:options.action, data:options.data}),
+            callback: options.callback || onPublished})
+    },
+
+    onPublished = function(info) {
+        console.log(info);
+    },
+
+    subscribe = function(options) {
+        pubSubService.subscribe({
+            channel: options.channel,
+            callback: function(message) {
+                var messageObj = JSON.parse(message);
+                if (messageObj.action == options.action) {
+                    options.callback(messageObj.data);
+                }
+            },
+            error:options.error || onError});
+    },
+
+    onError = function (e) {
+        console.log(e);
+        // info[0] == 1 for success
+        // info[0] == 0 for failure
+
+        // info[1] == "D" for "Demo Success" or
+        // info[1] == "S" for "Success with Valid Key" or
+        // info[1] == "Error..." with reason of failure.
+
+        // if the response is an error, do not re-publish.
+        // the failed publish will not re-send.
     };
-}());
+
+    return  {
+        publish: publish,
+        subscribe: subscribe
+    }
+}(PUBNUB));
 
 /**
  * Main function and initialization
  */
-TIRAMIZOO.main = (function (app) {
-    var mapController = app.map.controller,
+TIRAMIZOO.main = (function (app, $) {
+    var pubsub = app.pubsub,
 
-    onPageCreate = function() {
-
+    onNewDelivery = function(data) {
+        console.log("new delivery");
+        console.dir(data);
     },
-    onPushReceived = function (message) {
-        mapController.showDelivery();
-        console.log(message);
-    },
-    onPushError = function (e) {
-        console.log(e);
-    },
+    
     init = function() {
-        // subscribe to real-time push notification from PubNub
-        PUBNUB.subscribe({channel:"tiramizoo-courier-channel", callback:onPushReceived, error:onPushError});
+        pubsub.subscribe({channel:"tiramizoo-courier-delivery", action:"new_delivery", callback:onNewDelivery});
     };
-
+    
     $(document).bind("mobileinit", init);
-
-}(TIRAMIZOO));
+}(TIRAMIZOO, jQuery));

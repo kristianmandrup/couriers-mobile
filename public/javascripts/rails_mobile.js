@@ -32,14 +32,14 @@
 		}
 
         /* Jquery mobile additions:
-         * Use data-url attribute instead of action or href -
+         * Use data-remote-url attribute instead of action or href -
          * otherwise jquery mobile would change the page to this action/href
          * By using a custom data-url attribute redirection can be handled in the rails controller
          * Also show and hide the mobile page loader in the ajax events
         **/
-        var elementHasDataURL  = element.has("[data-url]");
+        var elementHasDataURL  = element.has("[data-remote-url]");
         if (elementHasDataURL) {
-            url = element.attr("data-url");
+            url = element.attr("data-remote-url");
         }
 
 		$.ajax({

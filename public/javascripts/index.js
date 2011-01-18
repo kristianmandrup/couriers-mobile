@@ -1,23 +1,89 @@
-$(document).ready(function() {
-    var mapOptions = {
+/**
+ * Controller with utility function for the map
+ */
+TIRAMIZOO.namespace("map");
+TIRAMIZOO.map = (function ($) {
+    var pubsub = TIRAMIZOO.pubsub,
+    map,
+    mapOptions = {
         zoom: 6,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     },
-    map;
+    geolocation,
+    geolocationOptions = {
+        enableHighAccuracy:false,
+        maximumAge:30000,
+        timeout:10000},
+    currentLocation,
+    currentLocationMarker,
 
-    geoLocationSuccess = function(position) {
-       map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+    setupMap = function() {
+        map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+        currentLocationMarker = new google.maps.Marker({
+            map: map,
+            title: "YOU!"});
     },
-    geoLocationError = function() {
-       map.setCenter(new google.maps.LatLng(60, 105));
+
+    setupGeolocation = function() {
+        geolocation = navigator.geolocation;
+        console.log(geolocation ? "hasGeolocation" : "noGeolocation");
+        if (geolocation) {
+            getCurrentPosition();
+            geolocation.watchPosition(geolocationChanged, geolocationError, geolocationOptions);
+        } else {
+            geolocationError({code:"general"});
+        }
+    },
+
+    getCurrentPosition = function() {
+        geolocation.getCurrentPosition(geolocationSuccess, geolocationError, geolocationOptions);
+    },
+
+    geolocationSuccess = function(position) {
+        console.log("geolocationSuccess");
+        updatePosition(position);
+    },
+
+    geolocationChanged = function(position) {
+        console.log("geolocationChanged");
+        updatePosition(position);
+    },
+
+    geolocationError = function(error) {
+        console.log("geolocationError: " + error.message);
+        console.dir(error);
+        switch (error.code) {
+            case error.PERMISSION_DENIED:
+                    
+                break;
+            case error.POSITION_UNAVAILABLE:
+                getCurrentPosition();
+                break;
+            case error.TIMEOUT:
+                getCurrentPosition();
+                break;
+            default:
+                    
+                break;
+        }
+    },
+
+    updatePosition = function(position) {
+        console.log("updatePosition");
+        currentLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        pubsub.publish({
+            channel: "tiramizoo-courier-location",
+            action: "update_location",
+            data: {
+                latitude: position.coords.latitude,
+                position: position.coords.longitude}});
+        currentLocationMarker.setPosition(currentLocation);
+        map.setCenter(currentLocation);
     };
 
-    map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
-    
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(geoLocationSuccess, geoLocationError);
-    } else {
-        geoLocationError();
-    }
-
-});
+    $(document).ready(function() {
+        console.log("index ready");
+        setupMap();
+        setupGeolocation();
+    })
+}(jQuery));

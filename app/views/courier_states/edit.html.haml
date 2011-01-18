@@ -6,4 +6,4 @@
     - @states.each do |state|
       %li[state]
         = image_tag "status-" + state.name.downcase + ".png"
-        = link_to state.name.upcase, "#", "data-url" => courier_states_path, :remote => true, :method => :put
+        = link_to state.name.upcase, "#", "data-remote-url" => courier_states_path, :remote => true, :method => :put
