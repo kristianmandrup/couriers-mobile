@@ -3092,7 +3092,7 @@ $.fn.grid = function(options){
 			true
 		);
 		event.preventDefault();
-	});
+	});	
 	
 	//click routing - direct to HTTP or Ajax, accordingly
 	$( "a" ).live( "click", function(event) {
@@ -3207,6 +3207,7 @@ $.fn.grid = function(options){
 
 	//for getting or creating a new page 
 	function changePage( to, transition, back, changeHash){
+
 		//from is always the currently viewed page
 		var toIsArray = $.type(to) === "array",
 			from = toIsArray ? to[0] : $.mobile.activePage,

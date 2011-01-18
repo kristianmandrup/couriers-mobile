@@ -51,7 +51,7 @@ TIRAMIZOO.main = (function (app) {
     },
     init = function() {
         // subscribe to real-time push notification from PubNub
-        // PUBNUB.subscribe({channel:"tiramizoo-courier-channel", callback:onPushReceived, error:onPushError});
+        PUBNUB.subscribe({channel:"tiramizoo-courier-channel", callback:onPushReceived, error:onPushError});
     };
 
     $(document).bind("mobileinit", init);

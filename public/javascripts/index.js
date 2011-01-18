@@ -1,14 +1,23 @@
 $(document).ready(function() {
-    var latlng = new google.maps.LatLng(-34.397, 150.644);
-    var myOptions = {
-      zoom: 8,
-      center: latlng,
-      mapTypeId: google.maps.MapTypeId.ROADMAP
+    var mapOptions = {
+        zoom: 6,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    },
+    map;
+
+    geoLocationSuccess = function(position) {
+       map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+    },
+    geoLocationError = function() {
+       map.setCenter(new google.maps.LatLng(60, 105));
     };
-    var map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
-});
 
-
-$(".page").live("pagecreate",function(event, ui){
+    map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
     
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(geoLocationSuccess, geoLocationError);
+    } else {
+        geoLocationError();
+    }
+
 });

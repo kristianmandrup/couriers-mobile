@@ -1,6 +1,6 @@
 var toPage = "<%= @mobile_redirect_path %>";
 if (toPage == "/") {
-    location.href = "/";
+    $(window).attr("location", "/");
 } else {
    $.mobile.changePage(toPage, "slide", false, true);
 }
