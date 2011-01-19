@@ -1,20 +1,17 @@
 - content_for :header do
-  %h1 Tiramizoo
-
-%div#map-canvas{"class" => "map-canvas"}
-
-- content_for :footer do
   %div{"class" => "ui-footer-navbar", "data-role" => "navbar"}
     %ul
       %li
-        = link_to "Location", deliveries_path, "data-icon" => "location"
+        = link_to "Location", "#", "data-icon" => "location"
       %li
         = link_to "Deliveries", deliveries_path, "data-icon" => "deliveries"
       %li
-        = link_to "Status", edit_courier_states_path, "data-icon" => "status"
+        = link_to (@courier.available ? "Available" : "Not available"), "#", "data-icon" => "status"
       %li
         = link_to "Radar", "", "data-icon" => "radar"
       %li
         = link_to "Settings", edit_settings_path, "data-icon" => "settings"
-        
+
+%div#map-canvas{"class" => "map-canvas"}
+
 = javascript_include_tag "index"

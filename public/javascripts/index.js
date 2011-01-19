@@ -5,10 +5,13 @@ TIRAMIZOO.namespace("map");
 TIRAMIZOO.map = (function ($) {
     var pubsub = TIRAMIZOO.pubsub,
     map,
+    initialLocation = new google.maps.LatLng(48.137035, 11.575919),
     mapOptions = {
-        zoom: 6,
+        zoom: 15,
         center: new google.maps.LatLng(48.137035, 11.575919),
-        mapTypeId: google.maps.MapTypeId.ROADMAP
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        navigationControlOptions: {style: google.maps.NavigationControlStyle.ZOOM_PAN},
+        zoomControlOptions: {style: google.maps.ZoomControlStyle.SMALL}
     },
     geolocation,
     geolocationOptions = {
@@ -23,6 +26,7 @@ TIRAMIZOO.map = (function ($) {
         currentLocationMarker = new google.maps.Marker({
             map: map,
             title: "YOU!"});
+        currentLocationMarker.setPosition(initialLocation);
     },
 
     setupGeolocation = function() {
@@ -69,6 +73,14 @@ TIRAMIZOO.map = (function ($) {
         }
     },
 
+    fitMapToMarkers = function(markers) {
+        var bounds = new google.maps.LatLngBounds();
+        for (var i = 0, listLen = markers.length; i < listLen; i++) {
+          bounds.extend(markers[i]);
+        }
+        map.fitBounds(bounds);
+    },
+
     updatePosition = function(position) {
         console.log("updatePosition");
         currentLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
@@ -80,6 +92,7 @@ TIRAMIZOO.map = (function ($) {
                 position: position.coords.longitude}});
         currentLocationMarker.setPosition(currentLocation);
         map.setCenter(currentLocation);
+        fitMapToMarkers([currentLocation]);
     };
 
     $(document).ready(function() {

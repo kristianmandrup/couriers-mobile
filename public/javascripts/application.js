@@ -78,7 +78,7 @@ TIRAMIZOO.main = (function (app, $) {
         console.log("new delivery");
         console.dir(data);
     },
-    
+
     init = function() {
         pubsub.subscribe({channel:"tiramizoo-courier-delivery", action:"new_delivery", callback:onNewDelivery});
     };

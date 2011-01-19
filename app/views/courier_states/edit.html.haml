@@ -1,9 +1,0 @@
-- content_for :header do
-  %h1 Change State
-
-= form_tag courier_states_path, :method => :put do
-  %ul{"data-role" => "listview"}
-    - @states.each do |state|
-      %li[state]
-        = image_tag "status-" + state.name.downcase + ".png"
-        = link_to state.name.upcase, "#", "data-remote-url" => courier_states_path, :remote => true, :method => :put

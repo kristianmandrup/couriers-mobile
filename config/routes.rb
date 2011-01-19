@@ -1,9 +1,6 @@
 TiramizooCourierApp::Application.routes.draw do
 
   root :to => "main#index"
- # root :to => "courier_states#edit"
-
-  resource :courier_states, :only => [:show, :edit, :update]
 
   namespace "delivery" do
     match "/" => "state#index"

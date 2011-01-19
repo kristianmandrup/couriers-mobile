@@ -66,7 +66,7 @@ courier/deliveries/1/state :get
 --------------------------------------------------------------------------------
 Set the state of a specific delivery
 
-courier/deliveries/1/state :put
+courier/deliveries/1/state :post
 {
 	state: "ready|accepted|cancelled|arrived_at_pickup|arrived_at_dropoff|billed"
 	location:	{
@@ -83,14 +83,18 @@ couriers/locations :get
 [
 	{
 		id: "1",
-		latitude: "150.644",
-		longitude: "-34.397", 
+		position: {
+            latitude: "150.644",
+            longitude: "-34.397"
+        }
 		vehicle: "bike|cargobike|motorbike|car|van"
 	},	
 	{
 		id: "2",
-		latitude: "150.644",
-		longitude: "-34.397", 
+		position: {
+            latitude: "150.644",
+            longitude: "-34.397"
+        }
 		vehicle: "bike|cargobike|motorbike|car|van"
 	}
 ]
@@ -143,7 +147,9 @@ channel: tiramizoo-courier-location
 {
     action: "update_location"
     data: {
-        latitude: "150.644",
-        longitude: "-34.397"
+        position: {
+            latitude: "150.644",
+            longitude: "-34.397"
+        }
     }
 }
