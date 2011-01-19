@@ -7,6 +7,7 @@ TIRAMIZOO.map = (function ($) {
     map,
     mapOptions = {
         zoom: 6,
+        center: new google.maps.LatLng(48.137035, 11.575919),
         mapTypeId: google.maps.MapTypeId.ROADMAP
     },
     geolocation,
@@ -50,8 +51,8 @@ TIRAMIZOO.map = (function ($) {
     },
 
     geolocationError = function(error) {
-        console.log("geolocationError: " + error.message);
-        console.dir(error);
+        console.log("geolocationError: " + error.message + " code: " + error.code);
+        console.log("errorCode constants: PERMISSION_DENIED: " + error.PERMISSION_DENIED + ", POSITION_UNAVAILABLE: " + error.POSITION_UNAVAILABLE + ", TIMEOUT: " + error.TIMEOUT);
         switch (error.code) {
             case error.PERMISSION_DENIED:
                     

@@ -11,10 +11,10 @@
       = yield :meta
       = csrf_meta_tag
     %body
-      %div{"class" => "page", "data-role" => "page"}
-        %div{"data-role" => "header", "data-position" => "fixed"}
+      %div{"data-role" => "page", "class" => "page"}
+        %div{"data-role" => "header", "class" => "page-header"}
           = yield :header
         %div{"data-role" => "content", "class" => "page-content"}
           = yield
-        %div{"data-role" => "footer", "data-position" => "fixed"}
+        %div{"class" => "page-footer"}
           = yield :footer
