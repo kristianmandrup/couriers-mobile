@@ -1,33 +1,15 @@
 html, body, .page, .page-content, #map-canvas {
     height: 100%;
-    margin: 0;
-    overflow: hidden;
-    padding: 0;
 }
+
+/*
+.page, .ui-content, #map-canvas {
+    height: 100%;
+}*/
 
 .page-content {
-    bottom: 65px;
-    height: auto;
-    margin: 0;
-    overflow:auto;
     padding: 0;
-    position: absolute;
-    top: 45px;
-    width: 100%;
 }
-
-.page-header {
-    position: absolute;
-    top: 0;
-    width: 100%;
-}
-
-.page-footer {
-    bottom: 0;
-    position: absolute;
-    width: 100%;
-}
-
 
 /* JQUERY MOBILE ADDITIONS / OVERRIDES */
 .ui-select-time-group .ui-select { margin: 0 -5px 0 0; display: inline-block; width: auto;}
