@@ -5,7 +5,7 @@ html, body, .page, .page-content, #map-canvas {
     padding: 0;
 }
 
-/*.page-content {
+.page-content {
     bottom: 65px;
     height: auto;
     margin: 0;
@@ -14,7 +14,7 @@ html, body, .page, .page-content, #map-canvas {
     position: absolute;
     top: 45px;
     width: 100%;
-}*/
+}
 
 .page-header {
     position: absolute;
@@ -28,9 +28,6 @@ html, body, .page, .page-content, #map-canvas {
     width: 100%;
 }
 
-.ui-footer-navbar {
-    background-color: #000;
-}
 
 /* JQUERY MOBILE ADDITIONS / OVERRIDES */
 .ui-select-time-group .ui-select { margin: 0 -5px 0 0; display: inline-block; width: auto;}
