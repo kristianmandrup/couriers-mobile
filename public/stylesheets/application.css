@@ -1,15 +1,4 @@
-.page, .page-content, #map-canvas {
-    height: 100%;
-}
-
-.page {
-    overflow:hidden;
-}
-
-.page-content {
-    margin: 0;
-    padding: 0;
-}
+.page, .ui-content, #map-canvas { width: 100%; height: 100%; padding: 0; }
 
 /* JQUERY MOBILE ADDITIONS / OVERRIDES */
 .ui-select-time-group .ui-select { margin: 0 -5px 0 0; display: inline-block; width: auto;}
