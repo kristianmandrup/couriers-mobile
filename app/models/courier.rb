@@ -18,10 +18,6 @@ class Courier
     }
   end
 
-  def available
-    current_state[:work_state]
-  end
-
   def change_state
     
   end

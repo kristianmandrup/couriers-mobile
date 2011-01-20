@@ -1,5 +1,5 @@
 /**
- * Controller with utility function for the map
+ * Utility functions to control the map
  */
 TIRAMIZOO.namespace("map");
 TIRAMIZOO.map = (function ($) {
@@ -7,7 +7,7 @@ TIRAMIZOO.map = (function ($) {
     map,
     initialLocation = new google.maps.LatLng(48.137035, 11.575919),
     mapOptions = {
-        zoom: 15,
+        zoom: 12,
         center: new google.maps.LatLng(48.137035, 11.575919),
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         navigationControlOptions: {style: google.maps.NavigationControlStyle.ZOOM_PAN},
@@ -75,7 +75,7 @@ TIRAMIZOO.map = (function ($) {
 
     fitMapToMarkers = function(markers) {
         var bounds = new google.maps.LatLngBounds();
-        for (var i = 0, listLen = markers.length; i < listLen; i++) {
+        for (var i = 0, max = markers.length; i < max; i++) {
           bounds.extend(markers[i]);
         }
         map.fitBounds(bounds);
@@ -100,4 +100,69 @@ TIRAMIZOO.map = (function ($) {
         setupMap();
         setupGeolocation();
     })
+}(jQuery));
+
+/**
+ * Utility functions to manage the courier workflow
+ */
+TIRAMIZOO.namespace("navigation");
+TIRAMIZOO.navigation = (function ($) {
+    function setMenuItems(items) {
+        var itemNode = $('.ui-block-a').clone();
+        for (var i = 0, max = items.length; i < max; i++) {
+            itemNode.appendTo('#main-nav ul');
+        }
+    }
+
+    function setButton(options) {
+        var activeClass = "ui-btn-active",
+        btn = $("#" + options.id);
+        if (options.active) {
+            btn.addClass(activeClass);
+        } else {
+            btn.removeClass(activeClass);
+        }
+        console.log(btn.find(".ui-btn-text").size());
+        btn.find(".ui-btn-text").text(options.label);
+    }
+
+    function setState(state) {
+        var courierAvailable = state == "available";
+        TIRAMIZOO.courier.workState = state;
+        setButton({
+            id: "state",
+            label: courierAvailable ? "Available" : "Not Available",
+            active: courierAvailable});
+    }
+
+    function changeStatus() {
+        $.post(
+                "/courier/state",
+                {work_state:getButtonData("state")},
+                function(data) {
+                    setState(data.workState);
+                });
+    }
+
+    function changeRadar() {
+
+    }
+
+    $(document).ready(function() {
+        $("#main-nav").delegate("a", "click", function() {
+            switch($(this).attr("data-icon")) {
+                case "state":
+                    changeStatus();
+                    break;
+                case "radar":
+                    changeRadar();
+                    break;
+            }
+        });
+        $.jGrowl("Hello world!");
+    });
+
+    return  {
+        setState: setState
+    }
 }(jQuery));

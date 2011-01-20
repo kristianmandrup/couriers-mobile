@@ -1,17 +1,25 @@
-- content_for :header do
-  %div{"class" => "ui-footer-navbar", "data-role" => "navbar"}
-    %ul
-      %li
-        = link_to "Location", "#", "data-icon" => "location"
-      %li
-        = link_to "Deliveries", deliveries_path, "data-icon" => "deliveries"
-      %li
-        = link_to (@courier.available ? "Available" : "Not available"), "#", "data-icon" => "status"
-      %li
-        = link_to "Radar", "", "data-icon" => "radar"
-      %li
-        = link_to "Settings", edit_settings_path, "data-icon" => "settings"
+%div{"data-role" => "page", "class" => "page"}
+  %div{"data-role" => "header"}
+    #main-nav{"class" => "ui-page-navbar", "data-role" => "navbar"}
+      %ul
+        %li
+          = link_to "Location", "#", "data-icon" => "location"
+        %li
+          = link_to "Deliveries", deliveries_path, "data-icon" => "deliveries"
+        %li
+          = link_to "asdasdasd", "#", "id" => "state", "data-icon" => "state"
+        %li
+          = link_to "Radar", "#", "data-icon" => "radar"
+        %li
+          = link_to "Settings", edit_settings_path, "data-icon" => "settings"
 
-%div#map-canvas{"class" => "map-canvas"}
+  %div{"data-role" => "content", "class" => "page-content"}
+    #notifications This will become a notification in the future...
+    #map-canvas{"class" => "map-canvas"}
 
 = javascript_include_tag "index"
+
+:javascript
+  $('[data-role=page]').live('pagecreate', function() {
+    TIRAMIZOO.navigation.setState("#{@courier.current_state[:work_state]}");
+  });

@@ -3,6 +3,10 @@ class MainController < ActionController::Base
 
   def index
     @courier = Courier.current_courier
+    respond_to do |format|
+      format.html
+      format.js
+    end
   end
   
 end

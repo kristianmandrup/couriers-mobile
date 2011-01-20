@@ -1,7 +1,30 @@
-- content_for :header do
-  %h1 Delivieries
-
-  %form
-  %div{"data-role" => "fieldcontain"}
-    %label{"for" => "search"} Search:
-    %input{"type" => "search", "name" => "search", "id" => "search"}
+%div{"data-role" => "page"}
+  %div{"data-role" => "header"}
+    %h1 Deliveries
+  %div{"data-role" => "content"}
+    %form
+    %div{"data-role" => "fieldcontain"}
+      %label{"for" => "search"} Search:
+      %input{"type" => "search", "name" => "search", "id" => "search"}
+    %ul{"data-role" => "listview"}
+      %li{"data-role" => "list-divider"} New Deliveries
+      %li
+        = link_to "Delivery1"
+      %li
+        = link_to "Delivery2"
+      %li
+        = link_to "Delivery3"
+      %li{"data-role" => "list-divider"} In Progress
+      %li
+        = link_to "Delivery1"
+      %li{"data-role" => "list-divider"} Completed Deliveries
+      %li
+        = link_to "Delivery1"
+      %li
+        = link_to "Delivery2"
+      %li
+        = link_to "Delivery3"
+      %li
+        = link_to "Delivery4"
+      %li
+        = link_to "Delivery5"

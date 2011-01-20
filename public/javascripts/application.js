@@ -69,6 +69,14 @@ TIRAMIZOO.pubsub = (function (pubSubService) {
 }(PUBNUB));
 
 /**
+ * Object to hold the courier state
+ */
+TIRAMIZOO.namespace("courier");
+TIRAMIZOO.courier = (function ($) {
+    return {};
+}(jQuery));
+
+/**
  * Main function and initialization
  */
 TIRAMIZOO.main = (function (app, $) {
@@ -84,4 +92,5 @@ TIRAMIZOO.main = (function (app, $) {
     };
     
     $(document).bind("mobileinit", init);
+
 }(TIRAMIZOO, jQuery));

@@ -5,7 +5,7 @@ Courier:
 --------------------------------------------------------------------------------
 Get current courier state
 
-courier/state :get
+courier/state :get, :post
 {
 	work_state: "available|not_available"
 	current_delivery: 	{
