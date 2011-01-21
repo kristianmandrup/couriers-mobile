@@ -20,40 +20,24 @@
               %option{"value" => "9"} 9
               %option{"value" => "10"} 10
             %select{"name" => "working_hours_from_minutes", "id" => "working_hours_from_minutes", "data-input-type" => "time"}
-              %option{"value" => "0"} 0
-              %option{"value" => "5"} 5
-              %option{"value" => "10"} 10
+              %option{"value" => "0"} 30
+              %option{"value" => "5"} 35
+              %option{"value" => "10"} 40
           %div{"class" => "ui-select-time-separator", "data-role" => "controlgroup", "data-type" => "horizontal"}
             %a{"href" => "#", "data-role" => "button"} -
           %div{"class" => "ui-select-time-group", "data-role" => "controlgroup", "data-type" => "horizontal"}
             %select{"name" => "working_hours_to_hours", "id" => "working_hours_to_hours", "data-input-type" => "time"}
-              %option{"value" => "8"} 8
-              %option{"value" => "9"} 9
-              %option{"value" => "10"} 10
+              %option{"value" => "8"} 18
+              %option{"value" => "9"} 19
+              %option{"value" => "10"} 20
             %select{"name" => "working_hours_to_minutes", "id" => "working_hours_to_minutes", "data-input-type" => "time"}
-              %option{"value" => "0"} 0
-              %option{"value" => "5"} 5
-              %option{"value" => "10"} 10
+              %option{"value" => "0"} 30
+              %option{"value" => "5"} 35
+              %option{"value" => "10"} 40
 
       %div{"data-role" => "fieldcontain"}
-        %label{"for" => "working_hours"} Max. Delivery Distance (KM):
+        %label{"for" => "working_hours"} Max. Distance (KM):
         %input{"type" => "range", "name" => "working_hours", "id" => "working_hours", "value" => "0", "min" => "0", "max" => "200"}
-
-      %div{"data-role" => "fieldcontain"}
-        %label{"for" => "username"} Password:
-        %input{"type" => "text", "name" => "password2", "id" => "password2"}
-
-      %div{"data-role" => "fieldcontain"}
-        %label{"for" => "username"} Password:
-        %input{"type" => "text", "name" => "password3", "id" => "password3"}
-
-      %div{"data-role" => "fieldcontain"}
-        %label{"for" => "username"} Password:
-        %input{"type" => "text", "name" => "password4", "id" => "password4"}
-
-      %div{"data-role" => "fieldcontain"}
-        %label{"for" => "username"} Password:
-        %input{"type" => "text", "name" => "password5", "id" => "password5"}
 
       %fielset{"class" => "ui-grid-a"}
         %div{"class" => "ui-block-a"}

@@ -1,0 +1,8 @@
+development:
+  tiramizoo_api_url: http://localhost:3000/api/
+
+test:
+  tiramizoo_api_url: http://localhost:3000/api/
+
+production:
+  tiramizoo_api_url: http://localhost:3000/api/

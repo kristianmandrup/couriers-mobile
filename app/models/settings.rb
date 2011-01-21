@@ -6,6 +6,10 @@ class Settings
   attr_accessor :username, :password
 
   def initialize(attributes = {})
+    update_attributes attributes
+  end
+
+  def update_attributes(attributes)
     attributes.each do |name, value|
       send("#{name}=", value)
     end

@@ -8,7 +8,11 @@ class SettingsController < ApplicationController
     #if @settings.update_attributes(params[:settings])
       
     #end
-    mobile_redirect_to root_path
+
+    #mobile_redirect_to root_path
+    render :update do |page|
+      page.redirect_to root_url
+    end
   end
 
 end

@@ -5,7 +5,7 @@ body, .page-content, #map-canvas {
   width: 100%;
 }
 
-.page {
+.page-index {
   height: 100%;
   position: fixed;
   width: 100%;
@@ -17,6 +17,7 @@ body, .page-content, #map-canvas {
 
 /* JQUERY MOBILE ADDITIONS / OVERRIDES */
 .ui-select-time-group .ui-select { margin: 0 -5px 0 0; display: inline-block; width: auto;}
+.ui-select-time-group .ui-select .ui-btn-text { width: 100%; }
 
 .form-control-group, .ui-select-time-group, .ui-select-time-separator {
     display: inline-block;
@@ -26,6 +27,11 @@ body, .page-content, #map-canvas {
     margin-left: 5px;
 }
 
+.ui-select-time-separator .ui-btn-inner {
+    padding-bottom: 14px;
+    padding-top: 10px;
+}
+
 .ui-page-navbar .ui-btn .ui-btn-inner { padding-top: 40px !important; }
 .ui-page-navbar .ui-btn .ui-icon { width: 30px!important; height: 30px!important; margin-left: -15px !important; box-shadow: none!important; -moz-box-shadow: none!important; -webkit-box-shadow: none!important; -webkit-border-radius: none !important; border-radius: none !important; }
 .ui-icon-location { background:  url(../images/icon-location.png) 50% 50% no-repeat;  background-size: 20px 21px; }
@@ -33,11 +39,3 @@ body, .page-content, #map-canvas {
 .ui-icon-state { background:  url(../images/icon-state.png) 50% 50% no-repeat;  background-size: 24px 27px; }
 .ui-icon-radar { background:  url(../images/icon-radar.png) 50% 50% no-repeat;  background-size: 27px 28px; }
 .ui-icon-settings { background:  url(../images/icon-settings.png) 50% 50% no-repeat;  background-size: 24px 27px; }
-
-#notifications {
-    background: #fff;
-    position: absolute;
-    bottom: 0px;
-    width: 100%;
-    z-index: 9999;
-}

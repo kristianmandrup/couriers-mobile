@@ -15,6 +15,16 @@ courier/state :get, :post
 						
 }
 --------------------------------------------------------------------------------
+Set current courier location
+
+courier/location :post
+{
+	position: 	{
+                    latitude: 150.644,
+                    longitude: -34.397
+                }
+}
+--------------------------------------------------------------------------------
 Get details about a sepcific delivery
 
 courier/deliveries/1/state :get
@@ -23,8 +33,8 @@ courier/deliveries/1/state :get
 	pickup:		{
 					location:	{
 									position: 	{
-													latitude: "150.644",
-													longitude: "-34.397"
+													latitude: 150.644,
+													longitude: -34.397
 												},
 									address: 	{
 													street: "Sendlinger Straﬂe 1",
@@ -44,8 +54,8 @@ courier/deliveries/1/state :get
 	dropoff:	{
 					location:	{
 									position: 	{
-													latitude: "150.644",
-													longitude: "-34.397"
+													latitude: 150.644,
+													longitude: -34.397
 												},
 									address: 	{
 													street: "Sendlinger Straﬂe 2",
@@ -70,8 +80,8 @@ courier/deliveries/1/state :post
 {
 	state: "ready|accepted|cancelled|arrived_at_pickup|arrived_at_dropoff|billed"
 	location:	{
-					longitude: "-34.397", 
-					latitude: "150.644"
+					longitude: -34.397,
+					latitude: 150.644
 				}
 }
 ################################################################################
@@ -79,22 +89,30 @@ Couriers:
 --------------------------------------------------------------------------------
 Get locations of all couriers within my radius
 
-couriers/locations :get
+location/nearby_couriers :get,
+params: {
+    radius: 20,
+    ne_latitude: 150.644,
+    ne_longitude: -34.397,
+    sw_latitude: 150.644,
+    sw_longitude: -34.397
+}
+
 [
 	{
 		id: "1",
 		position: {
-            latitude: "150.644",
-            longitude: "-34.397"
-        }
+            latitude: 150.644,
+            longitude: -34.397
+        },
 		vehicle: "bike|cargobike|motorbike|car|van"
 	},	
 	{
 		id: "2",
 		position: {
-            latitude: "150.644",
-            longitude: "-34.397"
-        }
+            latitude: 150.644,
+            longitude: -34.397
+        },
 		vehicle: "bike|cargobike|motorbike|car|van"
 	}
 ]
@@ -111,8 +129,8 @@ channel: tiramizoo-courier-delivery
         pickup:		{
                         location:	{
                                         position: 	{
-                                                        latitude: "150.644",
-                                                        longitude: "-34.397"
+                                                        latitude: 150.644,
+                                                        longitude: -34.397
                                                     },
                                         address: 	{
                                                         street: "Sendlinger Straﬂe 1",
@@ -126,8 +144,8 @@ channel: tiramizoo-courier-delivery
         dropoff:	{
                         location:	{
                                         position: 	{
-                                                        latitude: "150.644",
-                                                        longitude: "-34.397"
+                                                        latitude: 150.644,
+                                                        longitude: -34.397
                                                     },
                                         address: 	{
                                                         street: "Sendlinger Straﬂe 2",
@@ -141,15 +159,3 @@ channel: tiramizoo-courier-delivery
             }
 }
 --------------------------------------------------------------------------------
-Push new location from client to server
-
-channel: tiramizoo-courier-location
-{
-    action: "update_location"
-    data: {
-        position: {
-            latitude: "150.644",
-            longitude: "-34.397"
-        }
-    }
-}

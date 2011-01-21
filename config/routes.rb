@@ -12,12 +12,11 @@ TiramizooCourierApp::Application.routes.draw do
     match "/bill" => "state#bill"
   end
 
-  resource :courier do
-    member do
-      get :state
-      post :state
-    end
-  end
+  match "api/courier/state" => "api#state", :via => [:get, :post]
+
+  match "courier/state" => "couriers#state", :via => [:get, :post]
+  match "courier/location" => "couriers#location", :via => [:post]
+  match "location/nearby_couriers" => "couriers#nearby_couriers", :via => :get
 
   match "delivery-list" => "delivery_list#index", :as => :deliveries
 

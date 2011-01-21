@@ -1,29 +1,57 @@
 class Courier
+  include TiramizooApi
+  
+  attr_accessor :current
 
-  attr_accessor :current_courier
-
-  def self.current_courier
-    @current_courier = Courier.new
+  def self.current
+    @current = Courier.new
   end
 
-  def current_state
-    #state_result = RestClient.get "http://tiramizoo-beta.heroku.com/courier/state"
-    #ActiveSupport::JSON.decode(state_result)
-    @current_state = {
-      :work_state => "available",
-      :current_delivery => {
-        :state => "ready",
-        :id => "1"
+  def get_state
+    #call_api :get, "courier/state"
+    {
+      "work_state" => "not_available",
+      "current_delivery" => {
+        "state" => "ready",
+        "id" => "1"
       }
     }
   end
 
-  def change_state
+  def set_state(state)
+    #call_api :post, "courier/state", state
+    {"work_state" => "available"};
+  end
+
+  def location
     
   end
 
-  def update_location
-    
+  def set_location(location)
+    #call_api :post, "courier/location", location
+    {"location" => "nirvana"}
+  end
+
+  def nearby_couriers
+    #call_api :get, "couriers/locations"
+    [
+      {
+        "id" => "1",
+        "position" => {
+                "latitude" => 48.14978394834768,
+                "longitude" => 11.57573014497757
+            },
+        "vehicle" => "bike|cargobike|motorbike|car|van"
+      },
+      {
+        "id" => "2",
+        "position" => {
+                "latitude" => 48.13922104853906,
+                "longitude" => 11.56599909067154
+            },
+        "vehicle" => "bike|cargobike|motorbike|car|van"
+      }
+    ]
   end
 
 end

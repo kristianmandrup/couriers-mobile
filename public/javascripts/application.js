@@ -22,22 +22,62 @@ TIRAMIZOO.namespace = function (namespaceStr) {
 };
 
 /**
+ * Logging utility
+ */
+TIRAMIZOO.log = function (obj) {
+    console.log(obj);
+};
+
+/**
+ * Ajax helpers
+ */
+TIRAMIZOO.namespace("ajax");
+TIRAMIZOO.ajax = (function ($) {
+    function getJSON(options) {
+        var paramsStr = "";
+        if (options.loader || !options.hasOwnProperty("loader")) {
+            $.mobile.pageLoading();
+        }
+        if (options.params) {
+            paramsStr = "?" + $.param(options.params);
+        }
+        $.getJSON("/" + options.action + ".json" + paramsStr, options.callback);
+    }
+
+    function postJSON(options) {
+        if (options.loader || !options.hasOwnProperty("loader")) {
+            $.mobile.pageLoading();
+        }
+        $.post("/" + options.action + ".json", JSON.stringify(options.params), options.callback);
+    }
+
+    $('html').ajaxComplete(function() {
+        $.mobile.pageLoading(true);
+    });
+
+    return {
+        getJSON: getJSON,
+        postJSON :postJSON
+    };
+}(jQuery));
+
+/**
  * Object to encapsulate publish/subscribe behaviour
  */
 TIRAMIZOO.namespace("pubsub");
 TIRAMIZOO.pubsub = (function (pubSubService) {
-    publish = function(options) {
+    function publish(options) {
         pubSubService.publish({
             channel: options.channel,
             message: JSON.stringify({action:options.action, data:options.data}),
             callback: options.callback || onPublished})
-    },
+    }
 
-    onPublished = function(info) {
+    function onPublished(info) {
         console.log(info);
-    },
+    }
 
-    subscribe = function(options) {
+    function subscribe(options) {
         pubSubService.subscribe({
             channel: options.channel,
             callback: function(message) {
@@ -47,9 +87,9 @@ TIRAMIZOO.pubsub = (function (pubSubService) {
                 }
             },
             error:options.error || onError});
-    },
+    }
 
-    onError = function (e) {
+    function onError(e) {
         console.log(e);
         // info[0] == 1 for success
         // info[0] == 0 for failure
@@ -60,7 +100,7 @@ TIRAMIZOO.pubsub = (function (pubSubService) {
 
         // if the response is an error, do not re-publish.
         // the failed publish will not re-send.
-    };
+    }
 
     return  {
         publish: publish,
@@ -71,25 +111,31 @@ TIRAMIZOO.pubsub = (function (pubSubService) {
 /**
  * Object to hold the courier state
  */
-TIRAMIZOO.namespace("courier");
-TIRAMIZOO.courier = (function ($) {
-    return {};
+TIRAMIZOO.namespace("model");
+TIRAMIZOO.model = (function ($) {
+    return {
+        courier: {
+            AVAILABLE: "available",
+            NOT_AVAILABLE: "not_available"
+        },
+        radar: {}
+    };
 }(jQuery));
 
 /**
  * Main function and initialization
  */
 TIRAMIZOO.main = (function (app, $) {
-    var pubsub = app.pubsub,
+    var pubsub = app.pubsub;
 
-    onNewDelivery = function(data) {
+    function onNewDelivery(data) {
         console.log("new delivery");
         console.dir(data);
-    },
+    }
 
-    init = function() {
-        pubsub.subscribe({channel:"tiramizoo-courier-delivery", action:"new_delivery", callback:onNewDelivery});
-    };
+    function init() {
+        //pubsub.subscribe({channel:"tiramizoo-courier-delivery", action:"new_delivery", callback:onNewDelivery});
+    }
     
     $(document).bind("mobileinit", init);
 

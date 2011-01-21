@@ -2,115 +2,215 @@
  * Utility functions to control the map
  */
 TIRAMIZOO.namespace("map");
-TIRAMIZOO.map = (function ($) {
-    var pubsub = TIRAMIZOO.pubsub,
+TIRAMIZOO.map = (function (app, $) {
+    var pubsub = app.pubsub,
+    ajax = app.ajax,
     map,
-    initialLocation = new google.maps.LatLng(48.137035, 11.575919),
+    initialPosition = new google.maps.LatLng(48.137035, 11.575919),
     mapOptions = {
-        zoom: 12,
-        center: new google.maps.LatLng(48.137035, 11.575919),
+        zoom: 15,
+        center: initialPosition,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
-        navigationControlOptions: {style: google.maps.NavigationControlStyle.ZOOM_PAN},
-        zoomControlOptions: {style: google.maps.ZoomControlStyle.SMALL}
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+            position: google.maps.ControlPosition.LEFT_CENTER
+        },
+        navigationControl: true,
+        navigationControlOptions: {
+            style: google.maps.NavigationControlStyle.ZOOM_PAN,
+            position: google.maps.ControlPosition.LEFT_CENTER
+        },
+        scaleControl: true,
+        scaleControlOptions: {
+            position: google.maps.ControlPosition.LEFT_CENTER
+        }
     },
     geolocation,
     geolocationOptions = {
         enableHighAccuracy:false,
         maximumAge:30000,
-        timeout:10000},
-    currentLocation,
+        timeout:30000},
     currentLocationMarker,
+    nearbyCourierMarkers;
 
-    setupMap = function() {
+    function setupMap() {
         map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
-        currentLocationMarker = new google.maps.Marker({
-            map: map,
-            title: "YOU!"});
-        currentLocationMarker.setPosition(initialLocation);
-    },
+        currentLocationMarker = new google.maps.Marker({map: map, position: initialPosition, title: "YOU!"});
+    }
 
-    setupGeolocation = function() {
+    function setupGeolocation() {
         geolocation = navigator.geolocation;
-        console.log(geolocation ? "hasGeolocation" : "noGeolocation");
+        app.log(geolocation ? "hasGeolocation" : "noGeolocation");
         if (geolocation) {
             getCurrentPosition();
             geolocation.watchPosition(geolocationChanged, geolocationError, geolocationOptions);
         } else {
             geolocationError({code:"general"});
         }
-    },
+    }
 
-    getCurrentPosition = function() {
+    function getCurrentPosition() {
+        app.log("getCurrentPosition");
         geolocation.getCurrentPosition(geolocationSuccess, geolocationError, geolocationOptions);
-    },
+    }
 
-    geolocationSuccess = function(position) {
-        console.log("geolocationSuccess");
+    function geolocationSuccess(position) {
+        app.log("geolocationSuccess");
         updatePosition(position);
-    },
+    }
 
-    geolocationChanged = function(position) {
-        console.log("geolocationChanged");
+    function geolocationChanged(position) {
+        app.log("geolocationChanged");
         updatePosition(position);
-    },
+    }
 
-    geolocationError = function(error) {
-        console.log("geolocationError: " + error.message + " code: " + error.code);
-        console.log("errorCode constants: PERMISSION_DENIED: " + error.PERMISSION_DENIED + ", POSITION_UNAVAILABLE: " + error.POSITION_UNAVAILABLE + ", TIMEOUT: " + error.TIMEOUT);
+    function geolocationError(error) {
         switch (error.code) {
             case error.PERMISSION_DENIED:
-                    
+                app.log("geolocationError: PERMISSION_DENIED");
                 break;
             case error.POSITION_UNAVAILABLE:
+                app.log("geolocationError: POSITION_UNAVAILABLE");
                 getCurrentPosition();
                 break;
             case error.TIMEOUT:
+                app.log("geolocationError: TIMEOUT");
                 getCurrentPosition();
                 break;
             default:
-                    
+                app.log("geolocationError: OTHER");
                 break;
         }
-    },
+    }
 
-    fitMapToMarkers = function(markers) {
+    function fitMapToMarkers(markers) {
         var bounds = new google.maps.LatLngBounds();
         for (var i = 0, max = markers.length; i < max; i++) {
-          bounds.extend(markers[i]);
+          bounds.extend(markers[i].getPosition());
         }
         map.fitBounds(bounds);
-    },
+    }
 
-    updatePosition = function(position) {
-        console.log("updatePosition");
-        currentLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-        pubsub.publish({
-            channel: "tiramizoo-courier-location",
-            action: "update_location",
-            data: {
-                latitude: position.coords.latitude,
-                position: position.coords.longitude}});
-        currentLocationMarker.setPosition(currentLocation);
-        map.setCenter(currentLocation);
-        fitMapToMarkers([currentLocation]);
-    };
+    function updatePosition(position) {
+        app.log("updatePosition");
+        var currentPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        currentLocationMarker.setPosition(currentPosition);
+        map.setCenter(currentPosition);
+        ajax.postJSON({
+            action:"courier/location",
+            params: {position:{latitude: currentPosition.lat(), longitude: currentPosition.lng()}},
+            callback: function(data) {
+                app.log("posted location");
+            },
+            loader: false
+        });
+    }
+
+    function getNearbyCouriers(callback) {
+        var bounds = map.getBounds();
+        var northEast = bounds.getNorthEast();
+        var southWest = bounds.getSouthWest();
+        ajax.getJSON({
+                action: "location/nearby_couriers",
+                params: {
+                    ne_latitude: northEast.lat(),
+                    ne_longitude: northEast.lng(),
+                    sw_latitude: southWest.lat(),
+                    sw_longitude: southWest.lng()
+                },
+                callback: function(data) {
+                    showNearbyCouriers(data);
+                    callback();
+                }
+            });
+    }
+
+    function showNearbyCouriers(courierLocations) {
+        console.log("showNearbyCouriers");
+        console.dir(courierLocations);
+        var courierMarker,
+        courierLocation,
+        courierPosition;
+
+        nearbyCourierMarkers = [];
+        for (var i = 0, max = courierLocations.length; i < max; i++) {
+            courierLocation = courierLocations[i];
+            courierPosition = new google.maps.LatLng(courierLocation.position.latitude, courierLocation.position.longitude);
+            courierMarker = new google.maps.Marker({
+                map: map,
+                position: courierPosition,
+                title: courierLocation.id});
+            nearbyCourierMarkers.push(courierMarker);
+        }
+        fitMapToMarkers(nearbyCourierMarkers);
+    }
+
+    function hideNearbyCouriers() {
+        var courierMarker;
+        for (var i = 0, max = nearbyCourierMarkers.length; i < max; i++) {
+            courierMarker = nearbyCourierMarkers[i];
+            courierMarker.setMap(null);
+        }
+        nearbyCourierMarkers = null;
+    }
 
     $(document).ready(function() {
-        console.log("index ready");
+        app.log("index ready");
         setupMap();
         setupGeolocation();
-    })
-}(jQuery));
+    });
+
+    return  {
+        getNearbyCouriers: getNearbyCouriers,
+        showNearbyCouriers: showNearbyCouriers,
+        hideNearbyCouriers: hideNearbyCouriers,
+        myLocation: getCurrentPosition
+    }
+}(TIRAMIZOO, jQuery));
 
 /**
- * Utility functions to manage the courier workflow
+ * Utility functions to manage the main navigation
  */
 TIRAMIZOO.namespace("navigation");
-TIRAMIZOO.navigation = (function ($) {
-    function setMenuItems(items) {
-        var itemNode = $('.ui-block-a').clone();
-        for (var i = 0, max = items.length; i < max; i++) {
-            itemNode.appendTo('#main-nav ul');
+TIRAMIZOO.navigation = (function (app, $) {
+    var map = app.map,
+    ajax = app.ajax,
+    model = app.model;
+
+    function setLocation() {
+        map.myLocation();
+    }
+
+    function changeState() {
+        ajax.postJSON({
+            action: "courier/state",
+            params: {work_state: model.courier.workState == model.courier.AVAILABLE ? model.courier.NOT_AVAILABLE : model.courier.AVAILABLE},
+            callback: function(data) {
+                setState(data.work_state);
+            }
+        });
+    }
+
+    function setState(state) {
+        var courierAvailable = state == model.courier.AVAILABLE;
+        model.courier.workState = state;
+        setButton({id: "state", label: courierAvailable ? "Available" : "Not Available", active: courierAvailable});
+    }
+
+    function setRadar(active) {
+        model.radar.active = active;
+        setButton({id: "radar", active: active});
+    }
+
+    function changeRadar() {
+        if (!model.radar.active) {
+            map.getNearbyCouriers(function() {
+                setRadar(true);
+            });
+        } else {
+            map.hideNearbyCouriers();
+            setRadar(false);
         }
     }
 
@@ -122,37 +222,26 @@ TIRAMIZOO.navigation = (function ($) {
         } else {
             btn.removeClass(activeClass);
         }
-        console.log(btn.find(".ui-btn-text").size());
-        btn.find(".ui-btn-text").text(options.label);
+        if (options.label) {
+            btn.find(".ui-btn-text").text(options.label);
+        }
     }
 
-    function setState(state) {
-        var courierAvailable = state == "available";
-        TIRAMIZOO.courier.workState = state;
-        setButton({
-            id: "state",
-            label: courierAvailable ? "Available" : "Not Available",
-            active: courierAvailable});
-    }
-
-    function changeStatus() {
-        $.post(
-                "/courier/state",
-                {work_state:getButtonData("state")},
-                function(data) {
-                    setState(data.workState);
-                });
-    }
-
-    function changeRadar() {
-
+    function setMenuItems(items) {
+        var itemNode = $('.ui-block-a').clone();
+        for (var i = 0, max = items.length; i < max; i++) {
+            itemNode.appendTo('#main-nav ul');
+        }
     }
 
     $(document).ready(function() {
         $("#main-nav").delegate("a", "click", function() {
-            switch($(this).attr("data-icon")) {
+            switch($(this).attr("id")) {
+                case "location":
+                    setLocation();
+                    break;
                 case "state":
-                    changeStatus();
+                    changeState();
                     break;
                 case "radar":
                     changeRadar();
@@ -165,4 +254,4 @@ TIRAMIZOO.navigation = (function ($) {
     return  {
         setState: setState
     }
-}(jQuery));
+}(TIRAMIZOO, jQuery));

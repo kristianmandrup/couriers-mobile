@@ -1,12 +1,8 @@
-class MainController < ActionController::Base
+class MainController < ApplicationController
   layout "application"
 
   def index
-    @courier = Courier.current_courier
-    respond_to do |format|
-      format.html
-      format.js
-    end
+    @courier_state = Courier.current.get_state
   end
   
 end
