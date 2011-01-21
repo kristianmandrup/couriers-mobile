@@ -323,9 +323,17 @@ $.mobile.media = (function() {
 
 	return function( query ) {
 		if ( !( query in cache ) ) {
-			var styleBlock = $( "<style type='text/css'>" +
-				"@media " + query + "{#jquery-mediatest{position:absolute;}}" +
-				"</style>" );
+			var styleBlock = document.createElement('style'),
+        		cssrule = "@media " + query + " { #jquery-mediatest { position:absolute; } }";
+	        //must set type for IE!	
+	        styleBlock.type = "text/css";
+	        if (styleBlock.styleSheet){ 
+	          styleBlock.styleSheet.cssText = cssrule;
+	        } 
+	        else {
+	          styleBlock.appendChild(document.createTextNode(cssrule));
+	        } 
+				
 			$html.prepend( fakeBody ).prepend( styleBlock );
 			cache[ query ] = testDiv.css( "position" ) === "absolute";
 			fakeBody.add( styleBlock ).remove();
@@ -1201,11 +1209,11 @@ $.each({
 	});
 
 
-//trigger mobileinit event - useful hook for configuring $.mobile settings before they're used
+	//trigger mobileinit event - useful hook for configuring $.mobile settings before they're used
 	$( window.document ).trigger('mobileinit');
 
 
-//support conditions
+	//support conditions
 	//if device support condition(s) aren't met, leave things as they are -> a basic, usable experience,
 	//otherwise, proceed with the enhancements
 	if ( !$.mobile.gradeA() ) {
@@ -1213,7 +1221,7 @@ $.each({
 	}
 
 
-//define vars for interal use
+	//define vars for interal use
 	var $window = $(window),
 		$html = $('html'),
 		$head = $('head'),
@@ -1228,15 +1236,15 @@ $.each({
 			: undefined;
 
 
-//add mobile, initial load "rendering" classes to docEl
+	//add mobile, initial load "rendering" classes to docEl
 	$html.addClass('ui-mobile ui-mobile-rendering');
 
 
-//define & prepend meta viewport tag, if content is defined
+	//define & prepend meta viewport tag, if content is defined
 	$.mobile.metaViewportContent ? $("<meta>", { name: "viewport", content: $.mobile.metaViewportContent}).prependTo( $head ) : undefined;
 
 
-//expose some core utilities
+	//expose some core utilities
 	$.extend($.mobile, {
 
 		// turn on/off page loading message.
@@ -1245,7 +1253,9 @@ $.each({
 				$html.removeClass( "ui-loading" );
 			} else {
 				if( $.mobile.loadingMessage ){
-					$loader.appendTo($.mobile.pageContainer).css({top: $(window).scrollTop() + 75});
+					var activeLink = $( "." + $.mobile.activeBtnClass ).eq(0),
+						yPos = activeLink.length ? activeLink.offset().top : $(window).scrollTop() + 75;
+					$loader.appendTo($.mobile.pageContainer).css({top: yPos});
 				}
 				$html.addClass( "ui-loading" );
 			}
@@ -1265,7 +1275,7 @@ $.each({
 	});
 
 
-//dom-ready inits
+	//dom-ready inits
 	$(function(){
 
 		//find present pages
@@ -1295,7 +1305,7 @@ $.each({
 	});
 
 
-//window load event
+	//window load event
 	//hide iOS browser chrome on load
 	$window.load( $.mobile.silentScroll );
 
@@ -1464,6 +1474,16 @@ $.each({
 
 	//url stack, useful when plugins need to be aware of previous pages viewed
 	$.mobile.urlStack = urlStack;
+
+	//check for an external resource
+	$.mobile.isExternalLink = function(anchor){
+		var $anchor = $(anchor),
+			hasProtocol = /^(:?\w+:)/.test( $anchor.attr('href') ),
+			hasRelExternal = $anchor.is( "[rel=external]" ),
+			hasTarget = $anchor.is( "[target]" );
+
+		return hasProtocol || hasRelExternal || hasTarget;
+	},
 
 	// changepage function
 	$.mobile.changePage = function( to, transition, back, changeHash){
@@ -1747,8 +1767,9 @@ $.each({
 			href = $this.attr( "href" ).replace( location.protocol + "//" + location.host, ""),
 			//if target attr is specified, it's external, and we mimic _blank... for now
 			target = $this.is( "[target]" ),
+
 			//if it still starts with a protocol, it's external, or could be :mailto, etc
-			external = target || /^(:?\w+:)/.test( href ) || $this.is( "[rel=external]" );
+			external = $.mobile.isExternalLink(this);
 
 		if( href === '#' ){
 			//for links created purely for interaction - ignore
@@ -2338,9 +2359,10 @@ $.fixedToolbars = (function(){
 		
 	//before page is shown, check for duplicate footer
 	$('.ui-page').live('pagebeforeshow', function(event, ui){
-		var page = $(event.target);
-		var footer = page.find('[data-role="footer"]:not(.ui-sticky-footer)');
-		var id = footer.data('id');
+		var page = $(event.target),
+			footer = page.find('[data-role="footer"]:not(.ui-sticky-footer)'),
+			id = footer.data('id');
+		stickyFooter = null;
 		if (id)
 		{
 			stickyFooter = $('.ui-footer[data-id="' + id + '"].ui-sticky-footer');
@@ -4102,7 +4124,7 @@ $.widget( "mobile.listview", $.mobile.widget, {
 		$( parentList.find( "ul, ol" ).toArray().reverse() ).each(function( i ) {
 			var list = $( this ),
 				parent = list.parent(),
-				title = $.trim(parent.contents()[ 0 ].nodeValue.split("\n")[0]) || parent.find('a:first').text(),
+				title = $.trim(parent.contents()[ 0 ].nodeValue) || parent.find('a:first').text(),
 				id = parentId + "&" + $.mobile.subPageUrlKey + "=" + self._idStringEscape(title + " " + i),
 				theme = list.data( "theme" ) || o.theme,
 				countTheme = list.data( "counttheme" ) || parentList.data( "counttheme" ) || o.countTheme,
@@ -4176,29 +4198,40 @@ $( "[data-role='listview']" ).live( "listviewcreate", function() {
 * jQuery Mobile Framework : "dialog" plugin.
 * Copyright (c) jQuery Project
 * Dual licensed under the MIT (MIT-LICENSE.txt) and GPL (GPL-LICENSE.txt) licenses.
-* Note: Code is in draft form and is subject to change 
+* Note: Code is in draft form and is subject to change
 */
 (function($, undefined ) {
 $.widget( "mobile.dialog", $.mobile.widget, {
 	options: {},
-	_create: function(){	
+	_create: function(){
 		var self = this,
 			$el = self.element,
 			$prevPage = $.mobile.activePage,
-			$closeBtn = $('<a href="#" data-icon="delete" data-iconpos="notext">Close</a>');
+			$closeBtn = $('<a href="#" data-icon="delete" data-iconpos="notext">Close</a>'),
 
-    var dialogClickHandler = function(e){
-			if( e.type == "click" && ( $(e.target).closest('[data-back]')[0] || this==$closeBtn[0] ) ){
-				self.close();
-				return false;
-			}
-			//otherwise, assume we're headed somewhere new. set activepage to dialog so the transition will work
-			$.mobile.activePage = self.element;
-		};
-	
+			dialogClickHandler = function(e){
+				var $target = $(e.target);
+
+				// fixes issues with target links in dialogs breaking
+				// page transitions by reseting the active page below
+				if( $.mobile.isExternalLink($target) ) {
+					return;
+				}
+
+				if( e.type == "click" && ( $(e.target).closest('[data-back]')[0] || this==$closeBtn[0] ) ){
+					self.close();
+					return false;
+				}
+
+				//otherwise, assume we're headed somewhere new. set activepage to dialog so the transition will work
+				$.mobile.activePage = self.element;
+			};
+
+		// NOTE avoid click handler in the case of an external resource
+		// TODO add function in navigation to handle external check
 		$el.delegate("a", "click", dialogClickHandler);
 		$el.delegate("form", "submit", dialogClickHandler);
-	
+
 		this.element
 			.bind("pageshow",function(){
 				return false;
@@ -4212,11 +4245,11 @@ $.widget( "mobile.dialog", $.mobile.widget, {
 			.end()
 			.find('.ui-content:not([class*="ui-body-"])')
 				.addClass('ui-body-c')
-			.end()	
+			.end()
 			.find('.ui-content,[data-role=footer]')
 				.last()
 				.addClass('ui-corner-bottom ui-overlay-shadow');
-		
+
 		$(window).bind('hashchange',function(){
 			if( $el.is('.ui-page-active') ){
 				self.close();
@@ -4224,10 +4257,10 @@ $.widget( "mobile.dialog", $.mobile.widget, {
 					$.mobile.updateHash( $prevPage.attr('data-url'), true);
 				});
 			}
-		});		
+		});
 
 	},
-	
+
 	close: function(){
 		$.mobile.changePage([this.element, $.mobile.activePage], undefined, true, true );
 	}
@@ -4320,3 +4353,4 @@ $.fn.grid = function(options){
 	});	
 };
 })(jQuery);
+

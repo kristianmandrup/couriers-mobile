@@ -11,7 +11,7 @@ TIRAMIZOO.map = (function (app, $) {
         zoom: 15,
         center: initialPosition,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
-        mapTypeControl: true,
+        mapTypeControl: false,
         mapTypeControlOptions: {
             style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
             position: google.maps.ControlPosition.LEFT_CENTER
@@ -215,7 +215,7 @@ TIRAMIZOO.navigation = (function (app, $) {
     }
 
     function setButton(options) {
-        var activeClass = "ui-btn-active",
+        var activeClass = "ui-btn-navbar-active",
         btn = $("#" + options.id);
         if (options.active) {
             btn.addClass(activeClass);
@@ -235,7 +235,7 @@ TIRAMIZOO.navigation = (function (app, $) {
     }
 
     $(document).ready(function() {
-        $("#main-nav").delegate("a", "click", function() {
+        $("#main-nav").delegate("a", "click", function(ev) {
             switch($(this).attr("id")) {
                 case "location":
                     setLocation();

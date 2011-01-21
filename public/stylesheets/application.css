@@ -15,6 +15,12 @@ body, .page-content, #map-canvas {
     position: static;
 }
 
+.ui-page .ui-header {
+    position: absolute;
+    bottom: 0;
+    z-index: 9999;
+}
+
 /* JQUERY MOBILE ADDITIONS / OVERRIDES */
 .ui-select-time-group .ui-select { margin: 0 -5px 0 0; display: inline-block; width: auto;}
 .ui-select-time-group .ui-select .ui-btn-text { width: 100%; }
@@ -39,3 +45,23 @@ body, .page-content, #map-canvas {
 .ui-icon-state { background:  url(../images/icon-state.png) 50% 50% no-repeat;  background-size: 24px 27px; }
 .ui-icon-radar { background:  url(../images/icon-radar.png) 50% 50% no-repeat;  background-size: 27px 28px; }
 .ui-icon-settings { background:  url(../images/icon-settings.png) 50% 50% no-repeat;  background-size: 24px 27px; }
+
+.ui-btn-navbar-active {
+	border: 1px solid 		#155678;
+	background: 			#83da00;
+	font-weight: bold;
+	color: 					#fff;
+	cursor: pointer;
+	text-shadow: 0 -1px 1px #145072;
+	text-decoration: none;
+	background-image: -moz-linear-gradient(,
+							#85bae4,
+							#5393c5);
+	background-image: -webkit-gradient(linear,left top,left bottom,
+		color-stop(0, 		#85bae4),
+		color-stop(1, 		#5393c5));
+  	-msfilter: "progid:DXImageTransform.Microsoft.gradient(startColorStr='#85bae4', EndColorStr='#5393c5')";
+}
+.ui-btn-navbar-active a.ui-link-inherit {
+	color: 					#fff;
+}
