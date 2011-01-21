@@ -91,7 +91,6 @@ Get locations of all couriers within my radius
 
 location/nearby_couriers :get,
 params: {
-    radius: 20,
     ne_latitude: 150.644,
     ne_longitude: -34.397,
     sw_latitude: 150.644,

@@ -85,6 +85,9 @@ TIRAMIZOO.map = (function (app, $) {
     }
 
     function fitMapToMarkers(markers) {
+        if (markers.length == 0) {
+            return;
+        }
         var bounds = new google.maps.LatLngBounds();
         for (var i = 0, max = markers.length; i < max; i++) {
           bounds.extend(markers[i].getPosition());
@@ -248,7 +251,6 @@ TIRAMIZOO.navigation = (function (app, $) {
                     break;
             }
         });
-        $.jGrowl("Hello world!");
     });
 
     return  {

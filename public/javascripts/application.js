@@ -41,14 +41,35 @@ TIRAMIZOO.ajax = (function ($) {
         if (options.params) {
             paramsStr = "?" + $.param(options.params);
         }
-        $.getJSON("/" + options.action + ".json" + paramsStr, options.callback);
+        $.ajax({
+            type: "GET",
+            url: "/" + options.action + ".json" + paramsStr,
+            dataType: "json",
+            contentType: "application/json",
+            processData: false,
+            success: function(data) {
+                options.callback(data)
+            }
+        });
+        //$.getJSON("/" + options.action + ".json" + paramsStr, options.callback);
     }
 
     function postJSON(options) {
         if (options.loader || !options.hasOwnProperty("loader")) {
             $.mobile.pageLoading();
         }
-        $.post("/" + options.action + ".json", JSON.stringify(options.params), options.callback);
+        $.ajax({
+            type: "POST",
+            url: "/" + options.action + ".json",
+            dataType: "json",
+            contentType: "application/json",
+            processData: false,
+            data: JSON.stringify(options.params),
+            success: function(data) {
+                options.callback(data)
+            }
+        });
+        //$.post("/" + options.action + ".json", JSON.stringify(options.params), options.callback);
     }
 
     $('html').ajaxComplete(function() {
@@ -81,9 +102,10 @@ TIRAMIZOO.pubsub = (function (pubSubService) {
         pubSubService.subscribe({
             channel: options.channel,
             callback: function(message) {
-                var messageObj = JSON.parse(message);
-                if (messageObj.action == options.action) {
-                    options.callback(messageObj.data);
+                console.log("pubSubService message: " + message);
+                console.dir(message);
+                if (message.action == options.action) {
+                    options.callback(message.data);
                 }
             },
             error:options.error || onError});
@@ -129,12 +151,13 @@ TIRAMIZOO.main = (function (app, $) {
     var pubsub = app.pubsub;
 
     function onNewDelivery(data) {
-        console.log("new delivery");
+        console.log("onNewDelivery");
         console.dir(data);
+        $.jGrowl("New Delivery: " + data.directions + "<br/>" + data.pickup.location.address.street);
     }
 
     function init() {
-        //pubsub.subscribe({channel:"tiramizoo-courier-delivery", action:"new_delivery", callback:onNewDelivery});
+        pubsub.subscribe({channel:"tiramizoo-courier-delivery", action:"new_delivery", callback:onNewDelivery});
     }
     
     $(document).bind("mobileinit", init);

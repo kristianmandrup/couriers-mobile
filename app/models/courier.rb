@@ -33,10 +33,10 @@ class Courier
   end
 
   def nearby_couriers
-    #call_api :get, "couriers/locations"
+    #call_api :get, "location/nearby_couriers"
     [
       {
-        "id" => "1",
+        #id" => "1",
         "position" => {
                 "latitude" => 48.14978394834768,
                 "longitude" => 11.57573014497757

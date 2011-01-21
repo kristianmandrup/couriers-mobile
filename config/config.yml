@@ -2,7 +2,7 @@ development:
   tiramizoo_api_url: http://tiramizoo-beta.heroku.com/
 
 test:
-  tiramizoo_api_url: http://localhost:3000/api/
+  tiramizoo_api_url: http://tiramizoo-beta.heroku.com/
 
 production:
   tiramizoo_api_url: http://tiramizoo-beta.heroku.com/
