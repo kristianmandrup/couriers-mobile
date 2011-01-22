@@ -5,10 +5,6 @@ body, .page-content, .page-index, #map-canvas {
     width: 100%;
 }
 
-.page-index {
-    overflow: hidden;
-}
-
 .page-index .page-footer {
     position: absolute;
     bottom: 0;
@@ -32,10 +28,30 @@ body, .page-content, .page-index, #map-canvas {
     padding-top: 10px;
 }
 
-.main-nav .ui-btn .ui-btn-inner { padding-top: 40px !important; }
-.main-nav .ui-btn .ui-icon { width: 30px!important; height: 30px!important; margin-left: -15px !important; box-shadow: none!important; -moz-box-shadow: none!important; -webkit-box-shadow: none!important; -webkit-border-radius: none !important; border-radius: none !important; }
+#main-nav .ui-btn .ui-btn-inner { padding-top: 40px !important; }
+#main-nav .ui-btn .ui-icon { width: 30px!important; height: 30px!important; margin-left: -15px !important; box-shadow: none!important; -moz-box-shadow: none!important; -webkit-box-shadow: none!important; -webkit-border-radius: none !important; border-radius: none !important; }
 .ui-icon-location { background:  url(../images/icon-location.png) 50% 50% no-repeat;  background-size: 20px 21px; }
 .ui-icon-deliveries { background:  url(../images/icon-deliveries.png) 50% 50% no-repeat;  background-size: 24px 25px; }
 .ui-icon-state { background:  url(../images/icon-state.png) 50% 50% no-repeat;  background-size: 24px 27px; }
 .ui-icon-radar { background:  url(../images/icon-radar.png) 50% 50% no-repeat;  background-size: 27px 28px; }
 .ui-icon-settings { background:  url(../images/icon-settings.png) 50% 50% no-repeat;  background-size: 24px 27px; }
+
+.main-nav-btn-active {
+	border: 1px solid 		#155678;
+	background: 			#4596ce;
+	font-weight: bold;
+	color: 					#fff;
+	cursor: pointer;
+	text-shadow: 0 -1px 1px #145072;
+	text-decoration: none;
+	background-image: -moz-linear-gradient(,
+							#85bae4,
+							#5393c5);
+	background-image: -webkit-gradient(linear,left top,left bottom,
+		color-stop(0, 		#85bae4),
+		color-stop(1, 		#5393c5));
+  	-msfilter: "progid:DXImageTransform.Microsoft.gradient(startColorStr='#85bae4', EndColorStr='#5393c5')";
+}
+.main-nav-active a.ui-link-inherit {
+	color: 					#fff;
+}

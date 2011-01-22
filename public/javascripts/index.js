@@ -218,7 +218,7 @@ TIRAMIZOO.navigation = (function (app, $) {
     }
 
     function setButton(options) {
-        var activeClass = "ui-btn-active",
+        var activeClass = "main-nav-btn-active",
         btn = $("#" + options.id);
         if (options.active) {
             btn.addClass(activeClass);
@@ -237,9 +237,9 @@ TIRAMIZOO.navigation = (function (app, $) {
         }
     }
 
-    $(document).ready(function() {
+    function setupNavigation() {
         $("#main-nav").delegate("a", "click", function(ev) {
-            //$(this).removeClass("ui-btn-active");
+            $(this).removeClass("ui-btn-active");
             switch($(this).attr("id")) {
                 case "location":
                     setLocation();
@@ -252,6 +252,15 @@ TIRAMIZOO.navigation = (function (app, $) {
                     break;
             }
         });
+    }
+
+    function setupEvents() {
+        app.main.bind("");
+    }
+
+    $(document).ready(function() {
+        setupNavigation();
+        setupEvents();
     });
 
     return  {
