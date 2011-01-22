@@ -1,18 +1,13 @@
-body, .page-content, #map-canvas {
+body, .page-content, .page-index, #map-canvas {
     height: 100%;
     margin: 0;
     padding: 0;
     width: 100%;
 }
 
-.page-index {
-    height: 100%;
-    width: 100%;
-}
-
 .page-index .ui-footer {
     position: absolute;
-    bottom: 0px;
+    bottom: 0;
     z-index: 9999;
 }
 
