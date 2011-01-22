@@ -21,7 +21,6 @@ body, .page-content, #map-canvas {
     z-index: 9999;
 }
 
-/* JQUERY MOBILE ADDITIONS / OVERRIDES */
 .ui-select-time-group .ui-select { margin: 0 -5px 0 0; display: inline-block; width: auto;}
 .ui-select-time-group .ui-select .ui-btn-text { width: 100%; }
 

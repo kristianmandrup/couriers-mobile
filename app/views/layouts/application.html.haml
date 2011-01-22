@@ -3,6 +3,8 @@
   %head
     %meta{:charset => "utf-8"}
       %title= "Tiramizoo - " + (yield(:title) || "Home")
+      %meta{"name" => "apple-mobile-web-app-capable", "content" => "yes"}
+      %meta{"name" => "apple-mobile-web-app-status-bar-style", "content" => "black"}
       = stylesheet_link_tag "jquery.mobile-1.0a3pre", "jquery.jgrowl", "application"
       %link{"rel" => "apple-touch-icon", "href" => "images/apple-touch-icon.png"}
       = javascript_include_tag "http://pubnub-prod.appspot.com/js-api?pub-key=demo&sub-key=demo&origin=pubsub.pubnub.com&ssl=&java=&devmode=1"

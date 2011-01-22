@@ -156,10 +156,17 @@ TIRAMIZOO.main = (function (app, $) {
         $.jGrowl("New Delivery: " + data.directions + "<br/>" + data.pickup.location.address.street);
     }
 
-    function init() {
-        pubsub.subscribe({channel:"tiramizoo-courier-delivery", action:"new_delivery", callback:onNewDelivery});
+    function mobileInit() {
+        // $.mobile config
     }
-    
-    $(document).bind("mobileinit", init);
+
+    $(function() {
+        pubsub.subscribe({channel:"tiramizoo-courier-delivery", action:"new_delivery", callback:onNewDelivery});
+        $.jGrowl("Tiramizoo 4 teh win!");
+    });
+
+    //RestClient.put('http://tiramizoo-api.heroku.com/bookings/1', :data => 'hello')
+
+    $(document).bind("mobileinit", mobileInit);
 
 }(TIRAMIZOO, jQuery));
