@@ -7,12 +7,7 @@ body, .page-content, #map-canvas {
 
 .page-index {
     height: 100%;
-    position: fixed;
     width: 100%;
-}
-
-.page-noscroll {
-    position: static;
 }
 
 .page-index .ui-footer {
