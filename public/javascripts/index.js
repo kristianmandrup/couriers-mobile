@@ -218,7 +218,7 @@ TIRAMIZOO.navigation = (function (app, $) {
     }
 
     function setButton(options) {
-        var activeClass = "ui-btn-navbar-active",
+        var activeClass = "ui-btn-active",
         btn = $("#" + options.id);
         if (options.active) {
             btn.addClass(activeClass);
