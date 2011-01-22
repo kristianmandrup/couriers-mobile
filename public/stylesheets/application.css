@@ -1,16 +1,23 @@
-body, .page-content, .page-index, #map-canvas {
+body, .page-content, #map-canvas {
     height: 100%;
     margin: 0;
     padding: 0;
     width: 100%;
 }
 
-.page-index .ui-footer {
+.page-index {
+    height: 100%;
+    position: fixed;
+    width: 100%;
+}
+
+.page-index .page-footer {
     position: absolute;
     bottom: 0;
     z-index: 9999;
 }
 
+/* JQUERY MOBILE ADDITIONS / OVERRIDES */
 .ui-select-time-group .ui-select { margin: 0 -5px 0 0; display: inline-block; width: auto;}
 .ui-select-time-group .ui-select .ui-btn-text { width: 100%; }
 
@@ -27,8 +34,8 @@ body, .page-content, .page-index, #map-canvas {
     padding-top: 10px;
 }
 
-.ui-page-navbar .ui-btn .ui-btn-inner { padding-top: 40px !important; }
-.ui-page-navbar .ui-btn .ui-icon { width: 30px!important; height: 30px!important; margin-left: -15px !important; box-shadow: none!important; -moz-box-shadow: none!important; -webkit-box-shadow: none!important; -webkit-border-radius: none !important; border-radius: none !important; }
+.main-nav .ui-btn .ui-btn-inner { padding-top: 40px !important; }
+.main-nav .ui-btn .ui-icon { width: 30px!important; height: 30px!important; margin-left: -15px !important; box-shadow: none!important; -moz-box-shadow: none!important; -webkit-box-shadow: none!important; -webkit-border-radius: none !important; border-radius: none !important; }
 .ui-icon-location { background:  url(../images/icon-location.png) 50% 50% no-repeat;  background-size: 20px 21px; }
 .ui-icon-deliveries { background:  url(../images/icon-deliveries.png) 50% 50% no-repeat;  background-size: 24px 25px; }
 .ui-icon-state { background:  url(../images/icon-state.png) 50% 50% no-repeat;  background-size: 24px 27px; }

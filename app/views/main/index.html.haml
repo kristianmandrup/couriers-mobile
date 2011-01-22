@@ -1,8 +1,8 @@
 %div{"data-role" => "page", "class" => "page-index"}
   %div{"data-role" => "content", "class" => "page-content"}
     #map-canvas{"class" => "map-canvas"}
-  %div{"data-role" => "footer"}
-    #main-nav{"class" => "ui-page-navbar", "data-role" => "navbar"}
+  %div{"data-role" => "footer", "class" => "page-footer"}
+    #main-nav{"class" => "main-nav", "data-role" => "navbar"}
       %ul
         %li
           = link_to "My Location", "#", "id" => "location", "data-icon" => "location"

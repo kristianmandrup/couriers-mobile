@@ -239,6 +239,7 @@ TIRAMIZOO.navigation = (function (app, $) {
 
     $(document).ready(function() {
         $("#main-nav").delegate("a", "click", function(ev) {
+            //$(this).removeClass("ui-btn-active");
             switch($(this).attr("id")) {
                 case "location":
                     setLocation();
