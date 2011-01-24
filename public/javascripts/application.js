@@ -28,6 +28,12 @@ TIRAMIZOO.log = function () {
     console.log.apply(console, arguments);
 };
 
+TIRAMIZOO.codes = {
+    OK: "OK",
+    DELIVERY_TIMEOUT: "DELIVERY_TIMEOUT",
+    DELIVERY_TAKEN: "DELIVERY_TAKEN"
+};
+
 /**
  * Global event bus
  */
@@ -251,8 +257,84 @@ TIRAMIZOO.courier = (function (app, $) {
  */
 TIRAMIZOO.namespace("notifications");
 TIRAMIZOO.notifications = (function (app, $) {
+    var SECONDS_TO_ACCEPT = 20,
+    progressIntervalID,
+    progressBar,
+    progressBarMessage,
+    progressStartTime,
+    events = app.events;
 
-    function showDelivery(title, message) {
+    function showNewDelivery(deliveryData) {
+        var title = "New Delivery",
+        message = "From "
+                + deliveryData.pickup.location.address.street
+                + " to " + deliveryData.dropoff.location.address.street
+                + " (" + deliveryData.pickup.notes + ")";
+
+        $.jGrowl(message, {
+            header: title,
+            sticky: true,
+            closeTemplate: ""
+        });
+        showAcceptanceTimeout();
+    }
+
+    function hideNewDelivery() {
+        hideAcceptanceTimeout();
+        hideGrowl();
+    }
+
+    function showAcceptanceTimeout() {
+        $.jGrowl("", {
+            sticky: true,
+            closeTemplate: "",
+            afterOpen: showAcceptanceProgress
+        });
+    }
+
+    function showAcceptanceProgress() {
+        var growlDiv = $(".jGrowl-notification:last-child"),
+        progressContainer;
+
+        growlDiv.addClass("jGrowl-progress");
+        growlDiv.append('<div class="progress-bar"><div/><span/></div>');
+        progressContainer = growlDiv.find(".progress-bar");
+        progressBar = progressContainer.find("div");
+        progressBarMessage = progressContainer.find("span");
+        progressStartTime = new Date().getTime();
+        progressIntervalID = setInterval(updateAcceptanceTimeout, 1000);
+    }
+
+    function updateAcceptanceTimeout() {
+        var timePassed = new Date().getTime() - progressStartTime,
+        percentPassed = timePassed / (SECONDS_TO_ACCEPT * 1000) * 100,
+        timeLeft = SECONDS_TO_ACCEPT - Math.round(timePassed / 1000);
+        progressBar.css("width", percentPassed + "%");
+        progressBarMessage.text(timeLeft + " sec. left to accept delivery...");
+        if (timeLeft <= 0) {
+            hideNewDelivery();
+            events.dispatch("deliveryNotAccepted");
+        }
+    }
+
+    function hideAcceptanceTimeout() {
+        if (progressIntervalID) {
+            clearInterval(progressIntervalID);
+            progressIntervalID = null;
+            $(".progress-bar").remove();
+        }
+    }
+
+    function showPickUp(pickUpData) {
+        var title = "Go To Pickup",
+        contact = pickUpData.pickup.contact,
+        message = pickUpData.pickup.location.address.street
+                + ", " + contact.name + ", "
+                + contact.company_name + ", "
+                + contact.email + ", "
+                + contact.phone + " "
+                + " (" + pickUpData.pickup.notes + ")";
+
         $.jGrowl(message, {
             header: title,
             sticky: true,
@@ -260,16 +342,78 @@ TIRAMIZOO.notifications = (function (app, $) {
         });
     }
 
-    function hideDelivery() {
-        $("div.jGrowl").jGrowl("shutdown");
+    function hidePickUp() {
+        hideGrowl();
+    }
+
+    function showDropOff(dropOffData) {
+        var title = "Go To Dropoff",
+        contact = dropOffData.dropoff.contact,
+        message = dropOffData.dropoff.location.address.street
+                + ", " + contact.name + ", "
+                + contact.company_name + ", "
+                + contact.email + ", "
+                + contact.phone + " "
+                + " (" + dropOffData.dropoff.notes + ")";
+
+        $.jGrowl(message, {
+            header: title,
+            sticky: true,
+            closeTemplate: ""
+        });
+    }
+
+    function hideDropOff() {
+        hideGrowl();
+    }
+
+    function showBilling(billingData) {
+        var title = "Go To Billing",
+        contact = billingData.dropoff.contact,
+        message = contact.name + ", "
+                + contact.company_name + ", "
+                + contact.email + ", "
+                + contact.phone + " "
+                + " (" + billingData.dropoff.notes + ")";
+
+        $.jGrowl(message, {
+            header: title,
+            sticky: true,
+            closeTemplate: ""
+        });
+    }
+
+    function showStatus(newStatus) {
+        $.jGrowl(newStatus.message, {
+            header: "Info",
+            closeTemplate: "",
+            life: 10000
+        });
+    }
+
+    function hideAll() {
+        hideAcceptanceTimeout();
+        hideGrowl();
+    }
+
+    function hideGrowl() {
+        $("div.jGrowl").jGrowl("close");
     }
     
     $.jGrowl.defaults.position = "center";
     $.jGrowl.defaults.closer = false;
 
     return {
-        showDelivery: showDelivery,
-        hideDelivery: hideDelivery
+        showNewDelivery: showNewDelivery,
+        hideNewDelivery: hideNewDelivery,
+        hideAcceptanceTimeout: hideAcceptanceTimeout,
+        showPickUp: showPickUp,
+        hidePickUp: hidePickUp,
+        showDropOff: showDropOff,
+        hideDropOff: hideDropOff,
+        showBilling: showBilling,
+        hideAll: hideAll,
+        showStatus: showStatus
     };
 
 }(TIRAMIZOO, $));
@@ -279,21 +423,12 @@ TIRAMIZOO.notifications = (function (app, $) {
  */
 TIRAMIZOO.namespace("workflow");
 TIRAMIZOO.workflow = (function (app, $) {
-    var events = app.events,
+    var codes = app.codes,
+    events = app.events,
     ajax = app.ajax,
     notifications = app.notifications,
     courier = app.courier,
     currentDelivery;
-
-    function newDelivery(newDelivery) {
-        app.log("newDelivery", newDelivery);
-        currentDelivery = newDelivery;
-        notifications.showDelivery("New Delivery", "From "
-                + newDelivery.pickup.location.address.street
-                + " to " + newDelivery.dropoff.location.address.street
-                + " (" + newDelivery.pickup.notes + ")");
-        events.dispatch("newDelivery", newDelivery);
-    }
 
     function setDeliveryState(state, callback) {
         ajax.postJSON({
@@ -305,30 +440,64 @@ TIRAMIZOO.workflow = (function (app, $) {
         });
     }
 
+    function isSuccessful(data) {
+        return data.status.code == codes.OK;
+    }
+
+    function newDelivery(deliveryData) {
+        app.log("newDelivery", deliveryData);
+        currentDelivery = deliveryData;
+        notifications.showNewDelivery(deliveryData);
+        events.dispatch("newDelivery", deliveryData);
+        window.location.href = "";
+    }
+
     function acceptDelivery(callback) {
-        setDeliveryState("accepted", callback);
+        notifications.hideAcceptanceTimeout();
+        setDeliveryState("accepted", function(pickUpData) {
+            var success = isSuccessful(pickUpData);
+            if (success) {
+                notifications.hideNewDelivery();
+                notifications.showPickUp(pickUpData);
+            } else {
+                notifications.showStatus(pickUpData.status);
+            }
+            callback(success);
+        });
     }
 
     function declineDelivery(callback) {
-        notifications.hideDelivery();
-        setDeliveryState("ready", callback);
+        notifications.hideAll();
+        setDeliveryState("declined", callback);
     }
 
     function arrivedAtPickUp(callback) {
-        setDeliveryState("arrived_at_pickup", callback);
+        setDeliveryState("arrived_at_pickup", function(dropOffData) {
+            if (isSuccessful(dropOffData)) {
+                notifications.hidePickUp();
+                notifications.showDropOff(dropOffData);
+                callback();
+            }
+        })
     }
 
     function arrivedAtDropOff(callback) {
-        setDeliveryState("arrived_at_dropoff", callback);
+        setDeliveryState("arrived_at_dropoff", function(billingData) {
+            if (isSuccessful(billingData)) {
+                notifications.hideDropOff();
+                notifications.showBilling(billingData);
+                callback();
+            }
+        });
     }
 
     function bill() {
-        notifications.hideDelivery();
+        notifications.hideAll();
         $.mobile.changePage("/billings/edit");
     }
 
     function cancel(callback) {
-        notifications.hideDelivery();
+        notifications.hideAll();
         setDeliveryState("cancelled", function() {
             callback();
         });
@@ -368,7 +537,7 @@ TIRAMIZOO.main = (function (app, $) {
     function init(options) {
         courier.setID(options.courierID);
         pubsub.subscribe({channel:"delivery-channel-" + courier.getID(), action:"new_delivery", callback:onNewDelivery});
-        setTimeout(test.newDelivery, 3000);
+        setTimeout(test.newDelivery, 5000);
     }
 
     return {

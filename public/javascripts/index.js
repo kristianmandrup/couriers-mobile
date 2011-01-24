@@ -32,6 +32,7 @@ TIRAMIZOO.map = (function (app, $) {
         enableHighAccuracy:false,
         maximumAge:30000,
         timeout:30000},
+    directionsRenderer,
     currentLocationMarker,
     nearbyCourierMarkers;
 
@@ -163,11 +164,12 @@ TIRAMIZOO.map = (function (app, $) {
    function showRoute(pickUpLocation, dropOffLocation) {
         var courier = app.courier,
         directionsService = new google.maps.DirectionsService(),
-        directionsRequest,
+        directionsRequest;
+       
         directionsRenderer = new google.maps.DirectionsRenderer();
         directionsRenderer.setMap(map);
 
-        switch (courier.travelMode) {
+        switch (courier.getTravelMode()) {
             case courier.BIKING:
                 travelMode = google.maps.DirectionsTravelMode.BICYCLING;
                 break;
@@ -193,6 +195,12 @@ TIRAMIZOO.map = (function (app, $) {
         });
     }
 
+    function hideRoute() {
+        if (directionsRenderer) {
+            directionsRenderer.setMap(null);
+        }
+    }
+
     function toggleRadar(callback) {
         if (nearbyCourierMarkers) {
             hideNearbyCouriers();
@@ -212,7 +220,8 @@ TIRAMIZOO.map = (function (app, $) {
     return  {
         toggleRadar: toggleRadar,
         showMyLocation: showMyLocation,
-        showRoute: showRoute
+        showRoute: showRoute,
+        hideRoute: hideRoute
     }
 }(TIRAMIZOO, jQuery));
 
@@ -269,16 +278,20 @@ TIRAMIZOO.navigation = (function (app, $) {
     }
 
     function addEvents() {
-        app.events.add("newDelivery", onNewDelivery);
+        events.add("newDelivery", onNewDelivery);
+        events.add("deliveryNotAccepted", showDefaultState);
+    }
+
+    function showDefaultState() {
+        map.hideRoute();
+        showDefaultMenuItems();
     }
 
     function showDefaultMenuItems() {
-        console.log("showDefaultMenuItems", defaultMenuItems);
         mainNav.html(defaultMenuItems);
     }
 
     function onNewDelivery(event, data) {
-        console.log("onNewDelivery (navigation)", data);
         setMenuItems([
                 {id:"accept-delivery", label:"Accept", icon:"accept"},
                 {id:"decline-delivery", label:"Decline", icon:"decline"}]);
@@ -286,16 +299,21 @@ TIRAMIZOO.navigation = (function (app, $) {
     }
 
     function acceptDelivery() {
-        workflow.acceptDelivery(function() {
-            setMenuItems([
-                {id:"arrived-at-pickup", label:"Arrived At Pickup", icon:"accept"},
-                {id:"cancel", label:"Cancel", icon:"decline"}]);
+        workflow.acceptDelivery(function(success) {
+            if (success) {
+                setMenuItems([
+                    {id:"arrived-at-pickup", label:"Arrived At Pickup", icon:"accept"},
+                    {id:"cancel", label:"Cancel", icon:"decline"}]);
+            } else {
+                map.hideRoute();
+                setDefaultMenuItems();
+            }
         });
     }
 
     function declineDelivery() {
         workflow.declineDelivery(function() {
-            showDefaultMenuItems();
+            showDefaultState();
         });
     }
 
@@ -316,12 +334,13 @@ TIRAMIZOO.navigation = (function (app, $) {
     }
 
     function bill() {
+        showDefaultState();
         workflow.bill();
     }
 
     function cancel() {
         workflow.cancel(function() {
-            showDefaultMenuItems();
+            showDefaultState();
         });
     }
 
@@ -417,7 +436,6 @@ TIRAMIZOO.index = (function (app, $) {
     var navigation = app.navigation;
 
     function init(options) {
-        console.log("options", options.defaultMenuItems);
         navigation.setState(options.workState);
         navigation.setDefaultMenuItems(options.defaultMenuItems);
     }

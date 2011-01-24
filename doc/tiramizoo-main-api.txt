@@ -1,23 +1,35 @@
 ################################################################################
 TIRAMIZOO REST-API
 ################################################################################
+All methods return status object
+
+// code OK
+// code DELIVERY_TIMEOUT
+// code DELIVERY_TAKEN
+
+return {
+    status: {
+        code: "OK",
+        message: "Delivery accepted"
+    }
+}
+--------------------------------------------------------------------------------
 Courier:
 --------------------------------------------------------------------------------
 Get current courier state
 
-courier/state :get, :post
+courier/state :get, :put
 {
 	work_state: "available|not_available"
 	current_delivery: 	{
-							state: "ready|accepted|cancelled|arrived_at_pickup|arrived_at_dropoff|billed",
+							state: "ready|accepted|declined|cancelled|arrived_at_pickup|arrived_at_dropoff|billed",
 							id: "1"
 						}
-						
 }
 --------------------------------------------------------------------------------
 Set current courier location
 
-courier/location :post
+courier/location :put
 {
 	position: 	{
                     latitude: 150.644,
@@ -25,10 +37,11 @@ courier/location :post
                 }
 }
 --------------------------------------------------------------------------------
-Get details about a sepcific delivery
+Get details about a specific delivery
 
 courier/deliveries/1/state :get
 {
+    id: "1",
 	directions: "3,5km to target",
 	pickup:		{
 					location:	{
@@ -76,9 +89,9 @@ courier/deliveries/1/state :get
 --------------------------------------------------------------------------------
 Set the state of a specific delivery
 
-courier/deliveries/1/state :post
+courier/deliveries/1/state :put
 {
-	state: "ready|accepted|cancelled|arrived_at_pickup|arrived_at_dropoff|billed"
+	state: "ready|accepted|declined|cancelled|arrived_at_pickup|arrived_at_dropoff|billed"
 	location:	{
 					longitude: -34.397,
 					latitude: 150.644
@@ -124,7 +137,7 @@ channel: 1-delivery-channel (#{id}-delivery-channel)
 {
     action: "new_delivery",
     data: {
-        id: 1,
+        id: "1",
         directions: "3,5km to target",
         pickup:		{
                         location:	{

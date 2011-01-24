@@ -50,7 +50,60 @@ class FakeCourier
   end
 
   def set_delivery_state(delivery)
-    {}
+    result = {status: {
+        code: "OK",
+        message: "OK"}
+    }
+    case delivery[:state]
+      when "accepted"
+        delivery_accepted result
+      when "arrived_at_pickup"
+        arrived_at_pickup result
+      when "arrived_at_dropoff"
+        arrived_at_dropoff result
+      else
+        result
+    end
+  end
+
+  def delivery_accepted(result)
+    result[:pickup] = {
+        location: {
+            address: {
+              street: "Sendlinger Str. 7"
+           }
+        },
+        contact: 	{
+          company_name: "tiramizoo",
+          name: "Michael Loehr",
+          email: "michael.loehr@tiramizoo.com",
+          phone: "089123456789"
+        },
+        notes: "Big box"
+    }
+    result
+  end
+
+  def arrived_at_pickup(result)
+    result[:dropoff] = {
+        location: {
+            address: {
+              street: "Tuerkenstr. 60"
+           }
+        },
+        contact: 	{
+          company_name: "tiramizoo",
+          name: "Max Mustermann",
+          email: "max.mustermann@host.com",
+          phone: "089123456789"
+        },
+        notes: "Big box"
+    }
+    result
+  end
+
+  def arrived_at_dropoff(result)
+    arrived_at_pickup result
   end
 
 end
