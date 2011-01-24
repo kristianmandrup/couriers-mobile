@@ -1,0 +1,10 @@
+%div{"data-role" => "page"}
+  %div{"data-role" => "header"}
+    %h1 Billing
+  %div{"data-role" => "content"}
+    %form
+      %fielset{"class" => "ui-grid-a"}
+      %div{"class" => "ui-block-a"}
+        %a{"href" => "#", "data-back" => "true", "data-role" => "button", "data-icon" => "minus"} Cancel
+      %div{"class" => "ui-block-b"}
+        = link_to "save", "#", "data-role" => "button", "data-icon" => "check", "data-remote-url" => billings_path, :remote => true, :method => :put

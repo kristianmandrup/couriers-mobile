@@ -7,16 +7,22 @@
         %li
           = link_to "My Location", "#", "id" => "location", "data-icon" => "location"
         %li
-          = link_to "Deliveries", deliveries_path, "data-icon" => "deliveries"
+          = link_to "Deliveries", deliveries_path, "id" => "deliveries", "data-icon" => "deliveries"
         %li
           = link_to "", "#", "id" => "state", "data-icon" => "state"
         %li
           = link_to "Radar", "#", "id" => "radar", "data-icon" => "radar"
         %li
-          = link_to "Settings", edit_settings_path, "data-icon" => "settings"
+          = link_to "Settings", edit_settings_path, "id" => "settings", "data-icon" => "settings"
 
 = javascript_include_tag "index"
 :javascript
   $(".page-index").live("pagecreate", function() {
-    TIRAMIZOO.navigation.setState('#{@courier_state["work_state"]}');
+    TIRAMIZOO.main.init({
+      courierID: '#{@current_courier.id}'
+    });
+    TIRAMIZOO.index.init({
+      workState: '#{@courier_state["work_state"]}',
+      defaultMenuItems: $("#main-nav ul:first")
+    });
   });

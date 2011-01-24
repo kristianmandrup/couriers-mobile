@@ -1,4 +1,4 @@
-body, .page-content, .page-index, #map-canvas {
+html, body, .page-content, .page-index, #map-canvas {
     height: 100%;
     margin: 0;
     padding: 0;
@@ -8,10 +8,10 @@ body, .page-content, .page-index, #map-canvas {
 .page-index .page-footer {
     position: absolute;
     bottom: 0;
-    z-index: 9999;
+    z-index: 9998;
 }
 
-/* JQUERY MOBILE ADDITIONS / OVERRIDES */
+/* jQuery Mobile Additions / Overrides */
 .ui-select-time-group .ui-select { margin: 0 -5px 0 0; display: inline-block; width: auto;}
 .ui-select-time-group .ui-select .ui-btn-text { width: 100%; }
 
@@ -35,6 +35,8 @@ body, .page-content, .page-index, #map-canvas {
 .ui-icon-state { background:  url(../images/icon-state.png) 50% 50% no-repeat;  background-size: 24px 27px; }
 .ui-icon-radar { background:  url(../images/icon-radar.png) 50% 50% no-repeat;  background-size: 27px 28px; }
 .ui-icon-settings { background:  url(../images/icon-settings.png) 50% 50% no-repeat;  background-size: 24px 27px; }
+.ui-icon-accept { background:  url(../images/icon-accept.png) 50% 50% no-repeat;  background-size: 18px 20px; }
+.ui-icon-decline { background:  url(../images/icon-decline.png) 50% 50% no-repeat;  background-size: 24px 27px; }
 
 .main-nav-btn-active {
 	border: 1px solid 		#155678;
@@ -44,7 +46,7 @@ body, .page-content, .page-index, #map-canvas {
 	cursor: pointer;
 	text-shadow: 0 -1px 1px #145072;
 	text-decoration: none;
-	background-image: -moz-linear-gradient(,
+	background-image: -moz-linear-gradient(
 							#85bae4,
 							#5393c5);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -54,4 +56,30 @@ body, .page-content, .page-index, #map-canvas {
 }
 .main-nav-active a.ui-link-inherit {
 	color: 					#fff;
+}
+
+.main-nav-btn-active {
+    background: 			#4596ce;
+}
+
+/* jGrowl Overrides */
+div.jGrowl {
+    padding: 0;
+}
+
+div.jGrowl div.jGrowl-notification, div.jGrowl div.jGrowl-closer {
+    margin: 0;
+    opacity: .75;
+    width: 100%;
+    -moz-border-radius: 0;
+    -webkit-border-radius: 0;
+}
+
+div.jGrowl div.jGrowl-notification {
+	min-height: 0;
+}
+
+div.jGrowl.center {
+	width: 100%;
+	left: 0;
 }

@@ -1,5 +1,5 @@
 /**
- * Declare TIRAMIZOO global and namespace utility function
+ * TIRAMIZOO global and namespace utility function
  * Used to create namespaces for the module pattern
  */
 var TIRAMIZOO = TIRAMIZOO || {};
@@ -24,9 +24,33 @@ TIRAMIZOO.namespace = function (namespaceStr) {
 /**
  * Logging utility
  */
-TIRAMIZOO.log = function (obj) {
-    console.log(obj);
+TIRAMIZOO.log = function () {
+    console.log.apply(console, arguments);
 };
+
+/**
+ * Global event bus
+ */
+TIRAMIZOO.namespace("events");
+TIRAMIZOO.events = (function (app, $) {
+    function add(event, callback) {
+        $(app.events).bind(event, callback);
+    }
+
+    function remove(event, callback) {
+        $(app.events).unbind(event, callback);
+    }
+
+    function dispatch(event, data) {
+        $(app.events).trigger(event, data);
+    }
+
+    return {
+        add: add,
+        remove: remove,
+        dispatch: dispatch
+    }
+}(TIRAMIZOO, $));
 
 /**
  * Ajax helpers
@@ -51,7 +75,6 @@ TIRAMIZOO.ajax = (function ($) {
                 options.callback(data)
             }
         });
-        //$.getJSON("/" + options.action + ".json" + paramsStr, options.callback);
     }
 
     function postJSON(options) {
@@ -69,10 +92,9 @@ TIRAMIZOO.ajax = (function ($) {
                 options.callback(data)
             }
         });
-        //$.post("/" + options.action + ".json", JSON.stringify(options.params), options.callback);
     }
 
-    $('html').ajaxComplete(function() {
+    $("html").ajaxComplete(function() {
         $.mobile.pageLoading(true);
     });
 
@@ -83,27 +105,26 @@ TIRAMIZOO.ajax = (function ($) {
 }(jQuery));
 
 /**
- * Object to encapsulate publish/subscribe behaviour
+ * Object for publish/subscribe behaviour
  */
 TIRAMIZOO.namespace("pubsub");
-TIRAMIZOO.pubsub = (function (pubSubService) {
+TIRAMIZOO.pubsub = (function (app, pubSubService) {
     function publish(options) {
         pubSubService.publish({
             channel: options.channel,
-            message: JSON.stringify({action:options.action, data:options.data}),
+            message: {action:options.action, data:options.data},
             callback: options.callback || onPublished})
     }
 
     function onPublished(info) {
-        console.log(info);
+        app.log(info);
     }
 
     function subscribe(options) {
         pubSubService.subscribe({
             channel: options.channel,
             callback: function(message) {
-                console.log("pubSubService message: " + message);
-                console.dir(message);
+                app.log("onPubSubMessage", message);
                 if (message.action == options.action) {
                     options.callback(message.data);
                 }
@@ -112,63 +133,258 @@ TIRAMIZOO.pubsub = (function (pubSubService) {
     }
 
     function onError(e) {
-        console.log(e);
-        // info[0] == 1 for success
-        // info[0] == 0 for failure
-
-        // info[1] == "D" for "Demo Success" or
-        // info[1] == "S" for "Success with Valid Key" or
-        // info[1] == "Error..." with reason of failure.
-
-        // if the response is an error, do not re-publish.
-        // the failed publish will not re-send.
+        app.log(e);
     }
 
     return  {
         publish: publish,
         subscribe: subscribe
     }
-}(PUBNUB));
+}(TIRAMIZOO, PUBNUB));
 
 /**
- * Object to hold the courier state
+ * Courier
  */
-TIRAMIZOO.namespace("model");
-TIRAMIZOO.model = (function ($) {
+TIRAMIZOO.namespace("courier");
+TIRAMIZOO.courier = (function (app, $) {
+    var AVAILABLE = "available",
+    NOT_AVAILABLE = "not_available",
+    BIKING = "biking",
+    DRIVING = "driving",
+    ajax = app.ajax,
+    workState,
+    id,
+    travelMode = BIKING,
+    currentPosition;
+
+    function getID() {
+        return id;
+    }
+
+    function setID(newID) {
+        id = newID;
+    }
+
+    function setState(newWorkState, callback) {
+        ajax.postJSON({
+            action: "courier/state",
+            params: {work_state: newWorkState},
+            callback: function(data) {
+                workState = data.work_state;
+                callback(workState);
+            }
+        });
+    }
+
+    function setAvailable(callback) {
+        setState(AVAILABLE, callback);
+    }
+
+    function setNotAvailable(callback) {
+        setState(NOT_AVAILABLE, callback);
+    }
+
+    function toggleWorkState(callback) {
+        if (isAvailable()) {
+            setNotAvailable(callback);
+        } else {
+            setAvailable(callback);
+        }
+    }
+
+    function isAvailable() {
+        return workState == AVAILABLE;
+    }
+
+    function setPosition(position) {
+        ajax.postJSON({
+            action:"courier/location",
+            params: {position:{latitude: position.latitude, longitude: position.longitude}},
+            callback: function(data) {
+                currentPosition = position;
+                app.log("posted location");
+            },
+            loader: false
+        });
+    }
+
+
+    function getPosition() {
+        return currentPosition;
+    }
+
+    function getNearbyCouriers(bounds, callback) {
+        ajax.getJSON({
+            action: "location/nearby_couriers",
+            params: {
+                ne_latitude: bounds.northEast.latitude,
+                ne_longitude: bounds.northEast.longitude,
+                sw_latitude: bounds.southWest.latitude,
+                sw_longitude: bounds.southWest.longitude
+            },
+            callback: function(nearbyCouriers) {
+                callback(nearbyCouriers);
+            }
+        });
+    }
+
+    function getTravelMode() {
+        return travelMode;
+    }
+
     return {
-        courier: {
-            AVAILABLE: "available",
-            NOT_AVAILABLE: "not_available"
-        },
-        radar: {}
+        getID: getID,
+        setID: setID,
+        isAvailable: isAvailable,
+        setAvailable: setAvailable,
+        setNotAvailable: setNotAvailable,
+        getTravelMode: getTravelMode,
+        toggleWorkState: toggleWorkState,
+        setPosition: setPosition,
+        getPosition: getPosition,
+        getNearbyCouriers: getNearbyCouriers
     };
-}(jQuery));
+}(TIRAMIZOO, $));
+
+/**
+ * Notifications
+ */
+TIRAMIZOO.namespace("notifications");
+TIRAMIZOO.notifications = (function (app, $) {
+
+    function showDelivery(title, message) {
+        $.jGrowl(message, {
+            header: title,
+            sticky: true,
+            closeTemplate: ""
+        });
+    }
+
+    function hideDelivery() {
+        $("div.jGrowl").jGrowl("shutdown");
+    }
+    
+    $.jGrowl.defaults.position = "center";
+    $.jGrowl.defaults.closer = false;
+
+    return {
+        showDelivery: showDelivery,
+        hideDelivery: hideDelivery
+    };
+
+}(TIRAMIZOO, $));
+
+/**
+ * Delivery workflow
+ */
+TIRAMIZOO.namespace("workflow");
+TIRAMIZOO.workflow = (function (app, $) {
+    var events = app.events,
+    ajax = app.ajax,
+    notifications = app.notifications,
+    courier = app.courier,
+    currentDelivery;
+
+    function newDelivery(newDelivery) {
+        app.log("newDelivery", newDelivery);
+        currentDelivery = newDelivery;
+        notifications.showDelivery("New Delivery", "From "
+                + newDelivery.pickup.location.address.street
+                + " to " + newDelivery.dropoff.location.address.street
+                + " (" + newDelivery.pickup.notes + ")");
+        events.dispatch("newDelivery", newDelivery);
+    }
+
+    function setDeliveryState(state, callback) {
+        ajax.postJSON({
+            action:"courier/deliveries/" + currentDelivery.id + "/state",
+            params: {state: state, position: courier.getPosition()},
+            callback: function(data) {
+                callback(data);
+            }
+        });
+    }
+
+    function acceptDelivery(callback) {
+        setDeliveryState("accepted", callback);
+    }
+
+    function declineDelivery(callback) {
+        notifications.hideDelivery();
+        setDeliveryState("ready", callback);
+    }
+
+    function arrivedAtPickUp(callback) {
+        setDeliveryState("arrived_at_pickup", callback);
+    }
+
+    function arrivedAtDropOff(callback) {
+        setDeliveryState("arrived_at_dropoff", callback);
+    }
+
+    function bill() {
+        notifications.hideDelivery();
+        $.mobile.changePage("/billings/edit");
+    }
+
+    function cancel(callback) {
+        notifications.hideDelivery();
+        setDeliveryState("cancelled", callback);
+    }
+
+    return {
+        newDelivery: newDelivery,
+        acceptDelivery: acceptDelivery,
+        declineDelivery: declineDelivery,
+        arrivedAtPickUp: arrivedAtPickUp,
+        arrivedAtDropOff: arrivedAtDropOff,
+        bill: bill
+    }
+
+}(TIRAMIZOO, jQuery));
 
 /**
  * Main function and initialization
  */
 TIRAMIZOO.main = (function (app, $) {
-    var pubsub = app.pubsub;
-
-    function onNewDelivery(data) {
-        console.log("onNewDelivery");
-        console.dir(data);
-        $.jGrowl("New Delivery: " + data.directions + "<br/>" + data.pickup.location.address.street,
-            {sticky: true});
-        $(this).trigger("newDelivery");
-    }
+    var pubsub = app.pubsub,
+    workflow = app.workflow,
+    courier = app.courier,
+    test = tiramizooTest(app, $);
 
     function mobileInit() {
         //config $.mobile
     }
 
-    $(function() {
-        pubsub.subscribe({channel:"tiramizoo-courier-delivery", action:"new_delivery", callback:onNewDelivery});
-        $.jGrowl("Tiramizoo 4 teh win!", {sticky:true});
-    });
-
-    //RestClient.put('http://tiramizoo-api.heroku.com/bookings/1', :data => 'hello')
+    function onNewDelivery(newDelivery) {
+        workflow.newDelivery(newDelivery);
+    }
 
     $(document).bind("mobileinit", mobileInit);
 
+    function init(options) {
+        courier.setID(options.courierID);
+        pubsub.subscribe({channel:"delivery-channel-" + courier.getID(), action:"new_delivery", callback:onNewDelivery});
+        setTimeout(test.newDelivery, 3000);
+    }
+
+    return {
+        init: init
+    }
+
 }(TIRAMIZOO, jQuery));
+
+/*
+$('.button').click(function() {
+    var menuItem = $(this).parent();
+    var panel = menuItem.find('.panel');
+    if (menuItem.hasClass("expanded")) {
+        menuItem.removeClass('expanded').addClass('collapsed');
+        panel.slideUp();
+    }
+    else if (menuItem.hasClass("collapsed")) {
+        menuItem.removeClass('collapsed').addClass('expanded');
+        panel.slideDown();
+    }
+});
+*/

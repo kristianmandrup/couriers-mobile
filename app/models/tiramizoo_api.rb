@@ -7,7 +7,6 @@ module TiramizooApi
         result = RestClient.send method, rest_url, {:accept => :json}
       when :post
         result = RestClient.send method, rest_url, params.to_json, :content_type => :json, :accept => :json
-      else
     end
     result
   end
