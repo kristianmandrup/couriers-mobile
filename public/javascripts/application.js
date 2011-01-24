@@ -329,7 +329,9 @@ TIRAMIZOO.workflow = (function (app, $) {
 
     function cancel(callback) {
         notifications.hideDelivery();
-        setDeliveryState("cancelled", callback);
+        setDeliveryState("cancelled", function() {
+            callback();
+        });
     }
 
     return {
@@ -338,7 +340,8 @@ TIRAMIZOO.workflow = (function (app, $) {
         declineDelivery: declineDelivery,
         arrivedAtPickUp: arrivedAtPickUp,
         arrivedAtDropOff: arrivedAtDropOff,
-        bill: bill
+        bill: bill,
+        cancel: cancel
     }
 
 }(TIRAMIZOO, jQuery));
