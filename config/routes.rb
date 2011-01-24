@@ -2,11 +2,9 @@ TiramizooCourierApp::Application.routes.draw do
 
   root :to => "main#index"
 
-  namespace "courier" do
-    match "/state" => "couriers#state", :via => [:get, :post]
-    match "/location" => "couriers#location", :via => [:post]
-    match "/deliveries/:id/state" => "couriers#delivery_state", :via => :post
-  end
+  match "courier/state" => "couriers#state", :via => [:get, :post]
+  match "courier/location" => "couriers#location", :via => [:post]
+  match "courier/deliveries/:id/state" => "couriers#delivery_state", :via => :post
 
   resource :billings, :only => [:edit, :update]
 
