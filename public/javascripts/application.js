@@ -449,7 +449,7 @@ TIRAMIZOO.workflow = (function (app, $) {
         currentDelivery = deliveryData;
         notifications.showNewDelivery(deliveryData);
         events.dispatch("newDelivery", deliveryData);
-        window.location.href = "";
+        //window.location.href = "";
     }
 
     function acceptDelivery(callback) {
