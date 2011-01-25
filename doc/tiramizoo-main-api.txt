@@ -20,7 +20,9 @@ Get current courier info
 
 courier/info :get
 {
-    work_state: "available|not_available"
+    id: "1",
+    work_state: "available|not_available",
+    travelMode: "biking|driving",
 	current_delivery: > courier/deliveries/{current_delivery_id}/info
 }
 
@@ -112,6 +114,8 @@ courier/deliveries/1/state :put
 					latitude: 150.644
 				}
 }
+
+returns: > courier/deliveries/1/info :get
 
 --------------------------------------------------------------------------------
 Locations:

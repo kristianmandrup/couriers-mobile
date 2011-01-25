@@ -28,6 +28,9 @@ TIRAMIZOO.log = function () {
     console.log.apply(console, arguments);
 };
 
+/**
+ * Constants for return codes
+ */
 TIRAMIZOO.codes = {
     OK: "OK",
     DELIVERY_TIMEOUT: "DELIVERY_TIMEOUT",
@@ -63,6 +66,10 @@ TIRAMIZOO.events = (function (app, $) {
  */
 TIRAMIZOO.namespace("ajax");
 TIRAMIZOO.ajax = (function ($) {
+    $("html").ajaxComplete(function() {
+        $.mobile.pageLoading(true);
+    });
+
     function getJSON(options) {
         var paramsStr = "";
         if (options.loader || !options.hasOwnProperty("loader")) {
@@ -99,10 +106,6 @@ TIRAMIZOO.ajax = (function ($) {
             }
         });
     }
-
-    $("html").ajaxComplete(function() {
-        $.mobile.pageLoading(true);
-    });
 
     return {
         getJSON: getJSON,
@@ -158,17 +161,22 @@ TIRAMIZOO.courier = (function (app, $) {
     BIKING = "biking",
     DRIVING = "driving",
     ajax = app.ajax,
-    workState,
     id,
-    travelMode = BIKING,
-    currentPosition;
+    currentPosition,
+    travelMode,
+    workState;
+
+    function init(info) {
+        id = info.id;
+        travelMode = info.travelMode;
+    }
 
     function getID() {
         return id;
     }
 
-    function setID(newID) {
-        id = newID;
+    function getTravelMode() {
+        return travelMode;
     }
 
     function setState(newWorkState, callback) {
@@ -208,12 +216,10 @@ TIRAMIZOO.courier = (function (app, $) {
             params: {position:{latitude: position.latitude, longitude: position.longitude}},
             callback: function(data) {
                 currentPosition = position;
-                app.log("posted location");
             },
             loader: false
         });
     }
-
 
     function getPosition() {
         return currentPosition;
@@ -234,20 +240,16 @@ TIRAMIZOO.courier = (function (app, $) {
         });
     }
 
-    function getTravelMode() {
-        return travelMode;
-    }
-
     return {
+        init: init,
         getID: getID,
-        setID: setID,
-        isAvailable: isAvailable,
+        getTravelMode: getTravelMode,
         setAvailable: setAvailable,
         setNotAvailable: setNotAvailable,
-        getTravelMode: getTravelMode,
         toggleWorkState: toggleWorkState,
-        setPosition: setPosition,
+        isAvailable: isAvailable,
         getPosition: getPosition,
+        setPosition: setPosition,
         getNearbyCouriers: getNearbyCouriers
     };
 }(TIRAMIZOO, $));
@@ -263,6 +265,33 @@ TIRAMIZOO.notifications = (function (app, $) {
     progressBarMessage,
     progressStartTime,
     events = app.events;
+
+    $.jGrowl.defaults.position = "center";
+    $.jGrowl.defaults.closer = false;
+
+    function showGrowl(options) {
+        hideGrowl();
+
+        var growlOptions = {
+            header: options.title,
+            closeTemplate: "",
+            sticky: options.sticky
+        };
+        if (!options.sticky) {
+            growlOptions.life = 10000;
+        }
+        growlOptions.afterOpen = options.afterOpen;
+        $.jGrowl(options.message, growlOptions);
+    }
+
+    function hideGrowl() {
+        $("div.jGrowl").jGrowl("close");
+    }
+
+    function hideAll() {
+        hideAcceptanceTimeout();
+        hideGrowl();
+    }
 
     function showNewDelivery(deliveryData) {
         var title = "New Delivery",
@@ -343,10 +372,6 @@ TIRAMIZOO.notifications = (function (app, $) {
         });
     }
 
-    function hidePickUp() {
-        hideGrowl();
-    }
-
     function showDropOff(dropOffData) {
         var title = "Go To Dropoff",
         contact = dropOffData.dropoff.contact,
@@ -362,10 +387,6 @@ TIRAMIZOO.notifications = (function (app, $) {
             message: message,
             sticky: true
         });
-    }
-
-    function hideDropOff() {
-        hideGrowl();
     }
 
     function showBilling(billingData) {
@@ -392,42 +413,6 @@ TIRAMIZOO.notifications = (function (app, $) {
         });
     }
 
-    function hideAll() {
-        hideAcceptanceTimeout();
-        hideGrowl();
-    }
-
-    function showGrowl(options) {
-        hideGrowl();
-
-        var growlOptions = {
-            header: options.title,
-            closeTemplate: "",
-            sticky: options.sticky
-        };
-        if (!options.sticky) {
-            growlOptions.life = 10000;
-        }
-        if (options.afterOpen) {
-            growlOptions.afterOpen = options.afterOpen;
-        }
-        growlOptions.beforeOpen = function() {
-            if (!$.mobile.activePage.hasClass("page-index")) {
-                $("div.jGrowl").css("top", $('div[data-role="header"]').height() + "px");
-            } else {
-                $("div.jGrowl").css("top", "0");
-            }
-        };
-        $.jGrowl(options.message, growlOptions);
-    }
-
-    function hideGrowl() {
-        $("div.jGrowl").jGrowl("close");
-    }
-    
-    $.jGrowl.defaults.position = "center";
-    $.jGrowl.defaults.closer = false;
-
     return {
         showNewDelivery: showNewDelivery,
         hideAcceptanceTimeout: hideAcceptanceTimeout,
@@ -441,141 +426,13 @@ TIRAMIZOO.notifications = (function (app, $) {
 }(TIRAMIZOO, $));
 
 /**
- * Delivery workflow (refactor to real state machine later?)
- */
-TIRAMIZOO.namespace("workflow");
-TIRAMIZOO.workflow = (function (app, $) {
-    var codes = app.codes,
-    events = app.events,
-    ajax = app.ajax,
-    notifications = app.notifications,
-    courier = app.courier,
-    currentDelivery;
-
-    function setCurrentState() {
-        if (currentDelivery) {
-            setState(currentDelivery.state);
-        }
-    }
-
-    function setState(state, data) {
-        switch (state) {
-            case "accepted":
-                deliveryAccepted(data);
-                break;
-            case "declined":
-                deliveryDeclined(data);
-                break;
-            case "arrived_at_pickup":
-                arrivedAtPickUp(data);
-                break;
-            case "arrived_at_dropoff":
-                arrivedAtDropOff(data);
-                break;
-            case "cancelled":
-                deliveryCancelled(data);
-                break;
-        }
-    }
-
-    function setRemoteState(state, callback) {
-        ajax.postJSON({
-            action:"courier/deliveries/" + currentDelivery.id + "/state",
-            params: {state: state, position: courier.getPosition()},
-            callback: function(data) {
-                callback(data);
-            }
-        });
-    }
-
-    function declineDelivery() {
-        setRemoteState("declined", function(data) {
-            deliveryDeclined(data);
-        });
-    }
-
-    function deliveryDeclined(data) {
-        notifications.hideAll();
-        events.dispatch("deliveryDeclined");
-    }
-
-    function setArrivedAtPickUp() {
-        setRemoteState("arrived_at_pickup", function(dropOffData) {
-            arrivedAtPickUp(dropOffData);
-        });
-    }
-
-    function arrivedAtPickUp(dropOffData) {
-        notifications.showDropOff(dropOffData);
-        events.dispatch("arrivedAtPickUp");
-    }
-
-    function setArrivedAtDropOff() {
-        setRemoteState("arrived_at_dropoff", function(billingData) {
-            notifications.showBilling(billingData);
-            events.dispatch("arrivedAtDropOff");
-        });
-    }
-
-    function bill() {
-        notifications.hideAll();
-        $.mobile.changePage("/billings/edit");
-        currentDelivery = null;
-    }
-
-    function cancelled(callback) {
-        notifications.hideAll();
-        setRemoteState("cancelled", function() {
-            callback();
-        });
-    }
-
-    function cancel() {
-        
-    }
-
-    function getState() {
-        
-    }
-
-    function setRemoteState(state, callback) {
-        ajax.postJSON({
-            action:"courier/deliveries/" + currentDelivery.id + "/state",
-            params: {state: state, position: courier.getPosition()},
-            callback: function(data) {
-                callback(data);
-            }
-        });
-    }
-
-    function setDefaultState() {
-        
-    }
-
-    return {
-        setCurrentState: setCurrentState,
-        newDelivery: newDelivery,
-        acceptDelivery: acceptDelivery,
-        declineDelivery: declineDelivery,
-        setArrivedAtPickUp: setArrivedAtPickUp,
-        setArrivedAtDropOff: setArrivedAtDropOff,
-        bill: bill,
-        cancel: cancel,
-        setRemoteState: setRemoteState,
-        setDefaultState: setDefaultState
-    }
-
-}(TIRAMIZOO, jQuery));
-
-/**
  * Workflow States
  */
 TIRAMIZOO.namespace("workflow.state");
 TIRAMIZOO.workflow.state = function (app, $) {
-    var notifications = app.notifications,
-    workflow = app.workflow;
+    var workflow = app.workflow;
 
-    function init() { }
+    function init(data) { }
     function acceptDelivery() { }
     function declineDelivery() { }
     function arrivedAtPickUp() { }
@@ -583,8 +440,7 @@ TIRAMIZOO.workflow.state = function (app, $) {
     function bill() { }
 
     function cancel() {
-        notifications.hideAll();
-        setRemoteState("cancelled", function() {
+        workflow.setRemoteDeliveryState("cancelled", function() {
             workflow.setDefaultState();
         });
     }
@@ -598,7 +454,6 @@ TIRAMIZOO.workflow.state = function (app, $) {
         bill: bill,
         cancel: cancel
     }
-
 };
 
 TIRAMIZOO.namespace("workflow.defaultState");
@@ -612,50 +467,62 @@ TIRAMIZOO.workflow.defaultState = function (app, $) {
     }
 
     return {
-        
+        init: init
     }
-    
 };
 
 TIRAMIZOO.namespace("workflow.newDeliveryState");
 TIRAMIZOO.workflow.newDeliveryState = function (app, $) {
-    var events = app.events,
+    var ajax = app.ajax,
+    events = app.events,
     notifications = app.notifications,
     workflow = app.workflow;
 
     function init(deliveryData) {
+        workflow.setCurrentDelivery(deliveryData);
         if (!$.mobile.activePage.hasClass("page-index")) {
-            window.location.href = "";
+            window.location.href = "#";
         }
         notifications.showNewDelivery(deliveryData);
-        events.dispatch("newDelivery");
+        events.dispatch("newDelivery", deliveryData);
     }
 
     function acceptDelivery() {
         notifications.hideAcceptanceTimeout();
-        workflow.setRemoteState("accepted", function (pickUpData) {
+        setRemoteDeliveryOffer("accepted", function (pickUpData) {
             workflow.setState("accepted", pickUpData);
         });
     }
 
     function declineDelivery() {
-        setRemoteState("declined", function(data) {
+        setRemoteDeliveryOffer("declined", function(data) {
             workflow.setDefaultState();
         });
     }
 
+    function setRemoteDeliveryOffer(response, callback) {
+        ajax.postJSON({
+            action:"courier/delivery_offers/" + workflow.getCurrentDelivery().id + "/response",
+            params: {response: response},
+            callback: function(data) {
+                callback(data);
+            }
+        });
+    }
+
     return {
+        init: init,
         acceptDelivery: acceptDelivery,
         declineDelivery: declineDelivery
     }
-    
 };
 
 TIRAMIZOO.namespace("workflow.acceptedState");
 TIRAMIZOO.workflow.acceptedState = function (app, $) {
     var codes = app.codes,
     events = app.events,
-    notifications = app.notifications;
+    notifications = app.notifications,
+    workflow = app.workflow;
 
     function init(pickUpData) {
         if (pickUpData.status.code == codes.OK) {
@@ -668,44 +535,183 @@ TIRAMIZOO.workflow.acceptedState = function (app, $) {
     }
 
     function arrivedAtPickUp() {
-        
+        workflow.setRemoteDeliveryState("arrived_at_pickup", function(dropOffData) {
+            workflow.setState("arrived_at_pickup", dropOffData);
+        });
     }
 
+    return {
+        init: init,
+        arrivedAtPickUp: arrivedAtPickUp
+    }
 };
+
+TIRAMIZOO.namespace("workflow.arrivedAtPickUpState");
+TIRAMIZOO.workflow.arrivedAtPickUpState = function (app, $) {
+    var events = app.events,
+    notifications = app.notifications,
+    workflow = app.workflow;
+
+    function init(dropOffData) {
+        notifications.showDropOff(dropOffData);
+        events.dispatch("arrivedAtPickUp");
+    }
+
+    function arrivedAtDropOff() {
+        workflow.setRemoteDeliveryState("arrived_at_dropoff", function(billingData) {
+            workflow.setState("arrived_at_dropoff", billingData);
+        });
+    }
+
+    return {
+        init: init,
+        arrivedAtDropOff: arrivedAtDropOff
+    }
+};
+
+TIRAMIZOO.namespace("workflow.arrivedAtDropOffState");
+TIRAMIZOO.workflow.arrivedAtDropOffState = function (app, $) {
+    var events = app.events,
+    notifications = app.notifications,
+    workflow = app.workflow;
+
+    function init(billingData) {
+        notifications.showBilling(billingData);
+        events.dispatch("arrivedAtDropOff");
+    }
+
+    function bill() {
+        workflow.setCurrentDelivery(null);
+        notifications.hideAll();
+        $.mobile.changePage("/billings/edit");
+    }
+
+    return {
+        init: init,
+        bill: bill
+    }
+};
+
+/**
+ * Delivery workflow (state machine)
+ */
+TIRAMIZOO.namespace("workflow");
+TIRAMIZOO.workflow = (function (app, $) {
+    var ajax = app.ajax,
+    courier = app.courier,
+    stateMapping = {
+        new_delivery: "newDeliveryState",
+        accepted: "acceptedState",
+        arrived_at_pickup: "arrivedAtPickUpState",
+        arrived_at_dropoff: "arrivedAtDropOffState",
+        billed: "defaultState",
+        cancelled: "defaultState"
+    },
+    workflow = app.workflow,
+    currentDelivery,
+    currentState;
+
+    function init(info) {
+        currentDelivery = info.currentDelivery;
+        setState(currentDelivery.state, currentDelivery);
+    }
+
+    function setState(state, data) {
+        var stateClassName = stateMapping[state] || "defaultState";
+        currentState = $.extend(
+                workflow.state(app, $),
+                workflow[stateClassName](app, $));
+        currentState.init(data);
+    }
+
+    function acceptDelivery() {
+        currentState.acceptDelivery();
+    }
+
+    function declineDelivery() {
+        currentState.declineDelivery();
+    }
+
+    function arrivedAtPickUp() {
+        currentState.arrivedAtPickUp();
+    }
+
+    function arrivedAtDropOff() {
+        currentState.arrivedAtDropOff();
+    }
+
+    function bill() {
+        currentState.bill();
+    }
+
+    function cancel() {
+        currentState.cancel();
+    }
+
+    function setDefaultState() {
+        setState("default");
+    }
+
+    function setRemoteDeliveryState(state, callback) {
+        ajax.postJSON({
+            action:"courier/deliveries/" + currentDelivery.id + "/state",
+            params: {state: state, position: courier.getPosition()},
+            callback: function(data) {
+                callback(data);
+            }
+        });
+    }
+
+    function getCurrentDelivery() {
+        return currentDelivery;
+    }
+
+    function setCurrentDelivery(newCurrentDelivery) {
+        currentDelivery = newCurrentDelivery;
+    }
+
+    return {
+        init: init,
+        getCurrentDelivery: getCurrentDelivery,
+        setCurrentDelivery: setCurrentDelivery,
+        setRemoteDeliveryState: setRemoteDeliveryState,
+        setState: setState,
+        setDefaultState: setDefaultState,
+        acceptDelivery: acceptDelivery,
+        declineDelivery: declineDelivery,
+        arrivedAtPickUp: arrivedAtPickUp,
+        arrivedAtDropOff: arrivedAtDropOff,
+        bill: bill,
+        cancel: cancel
+    }
+}(TIRAMIZOO, jQuery));
 
 /**
  * Main function and initialization
  */
 TIRAMIZOO.main = (function (app, $) {
-    var pubsub = app.pubsub,
+    var courier = app.courier,
+    pubsub = app.pubsub,
     workflow = app.workflow,
-    courier = app.courier,
     test = tiramizooTest(app, $);
+
+    $(document).bind("mobileinit", mobileInit);
+
+    $("html").delegate("a", "click", function(ev) {
+        $("div.ui-loader").css("top", "100px");
+    });
 
     function mobileInit() {
         //$.mobile.ajaxLinksEnabled = false;
         //$.mobile.ajaxFormsEnabled = false;
     }
 
-    $(document).bind("mobileinit", mobileInit);
-
     function init(options) {
-        courier.setID(options.courierID);
-        pubsub.subscribe({channel:"delivery-channel-" + courier.getID(), action:"new_delivery", callback:onNewDelivery});
-        //workflow.setState(options.currentState);
-        setTimeout(test.newDelivery, 5000);
+        courier.init({id: options.courierID, travelMode: "biking"});
+        workflow.init({currentDelivery: {state:"default"}});
+        pubsub.subscribe({channel:"delivery-" + courier.getID(), action:"delivery_offer", callback:onNewDelivery});
+        setTimeout(test.newDelivery, 10000);
     }
-
-    $("div").live('pageshow',function(event, ui) {
-        console.log("activePage", $.mobile.activePage);
-        if ($.mobile.activePage.hasClass("page-index")) {
-            workflow.setCurrentState();
-        }
-    });
-
-    $("html").delegate("a", "click", function(ev) {
-        $("div.ui-loader").css("top", "100px");
-    });
 
     function onNewDelivery(newDelivery) {
         workflow.setState("new_delivery", newDelivery);

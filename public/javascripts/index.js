@@ -3,9 +3,7 @@
  */
 TIRAMIZOO.namespace("map");
 TIRAMIZOO.map = (function (app, $) {
-    var pubsub = app.pubsub,
-    ajax = app.ajax,
-    courier = app.courier,
+    var courier = app.courier,
     map,
     initialLocation = new google.maps.LatLng(48.1359717, 11.572207),
     mapOptions = {
@@ -29,12 +27,17 @@ TIRAMIZOO.map = (function (app, $) {
     },
     geolocation,
     geolocationOptions = {
-        enableHighAccuracy:false,
-        maximumAge:30000,
-        timeout:30000},
+        enableHighAccuracy: false,
+        maximumAge: 30000,
+        timeout: 30000},
     directionsRenderer,
     currentLocationMarker,
     nearbyCourierMarkers;
+
+    $(document).ready(function() {
+        setupMap();
+        setupGeolocation();
+    });
 
     function setupMap() {
         map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
@@ -92,7 +95,6 @@ TIRAMIZOO.map = (function (app, $) {
     }
 
     function updatePosition(position) {
-        app.log("updatePosition");
         var currentLocation = new google.maps.LatLng(position.latitude, position.longitude);
         currentLocationMarker.setPosition(currentLocation);
         map.setCenter(currentLocation);
@@ -100,12 +102,10 @@ TIRAMIZOO.map = (function (app, $) {
     }
 
     function showMyLocation() {
-        console.log("showMyLocation", currentLocationMarker.getPosition());
         map.setCenter(currentLocationMarker.getPosition());
     }
 
     function getNearbyCouriers(callback) {
-        app.log("getNearbyCouriers");
         var bounds = map.getBounds(),
         northEast = bounds.getNorthEast(),
         southWest = bounds.getSouthWest();
@@ -123,7 +123,6 @@ TIRAMIZOO.map = (function (app, $) {
     }
 
     function showNearbyCouriers(courierLocations) {
-        app.log("showNearbyCouriers", courierLocations);
         var courierMarker,
         courierLocation,
         courierPosition;
@@ -162,8 +161,10 @@ TIRAMIZOO.map = (function (app, $) {
         }
     }
 
-   function showRoute(pickUpLocation, dropOffLocation) {
+    function showRoute(pickUpLocation, dropOffLocation) {
+        console.log("showRoute", pickUpLocation, dropOffLocation);
         var courier = app.courier,
+        travelMode,
         directionsService = new google.maps.DirectionsService(),
         directionsRequest;
        
@@ -199,10 +200,11 @@ TIRAMIZOO.map = (function (app, $) {
     function hideRoute() {
         if (directionsRenderer) {
             directionsRenderer.setMap(null);
+            directionsRenderer = null;
         }
     }
 
-    function toggleRadar(callback) {
+    function toggleNearbyCouriers(callback) {
         if (nearbyCourierMarkers) {
             hideNearbyCouriers();
             callback(false);
@@ -213,17 +215,16 @@ TIRAMIZOO.map = (function (app, $) {
         }
     }
 
-    $(document).ready(function() {
-        setupMap();
-        setupGeolocation();
-    });
+    function showDefaultState() {
+        hideRoute();
+        hideNearbyCouriers();
+    }
 
     return  {
-        toggleRadar: toggleRadar,
-        hideNearbyCouriers: hideNearbyCouriers,
         showMyLocation: showMyLocation,
+        toggleNearbyCouriers: toggleNearbyCouriers,
         showRoute: showRoute,
-        hideRoute: hideRoute
+        showDefaultState: showDefaultState
     }
 }(TIRAMIZOO, jQuery));
 
@@ -232,41 +233,45 @@ TIRAMIZOO.map = (function (app, $) {
  */
 TIRAMIZOO.namespace("navigation");
 TIRAMIZOO.navigation = (function (app, $) {
-    var workflow = app.workflow,
+    var courier = app.courier,
     map = app.map,
-    courier = app.courier,
+    workflow = app.workflow,
     defaultMenuItems,
     mainNav = $("#main-nav");
+
+    $(document).ready(function() {
+        setupNavigation();
+    });
 
     function setupNavigation() {
         mainNav.delegate("a", "click", function(ev) {
             switch($(this).attr("id")) {
-                case "location":
-                    setLocation();
+                case "my-location":
+                    setMyLocation();
                     break;
-                case "state":
-                    changeState();
+                case "work-state":
+                    changeWorkState();
                     break;
                 case "radar":
                     changeRadar();
                     break;
                 case "accept-delivery":
-                    acceptDelivery();
+                    workflow.acceptDelivery();
                     break;
                 case "decline-delivery":
-                    declineDelivery();
+                    workflow.declineDelivery();
                     break;
                 case "arrived-at-pickup":
-                    arrivedAtPickUp();
+                    workflow.arrivedAtPickUp();
                     break;
                 case "arrived-at-dropoff":
-                    arrivedAtDropOff();
+                    workflow.arrivedAtDropOff();
                     break;
                 case "bill":
-                    bill();
+                    workflow.bill();
                     break;
                 case "cancel":
-                    cancel();
+                    workflow.cancel();
                     break;
             }
             $(this).removeClass("ui-btn-active");
@@ -278,12 +283,25 @@ TIRAMIZOO.navigation = (function (app, $) {
         });
     }
 
-    function showDefaultState() {
-        showDefaultMenuItems();
+    function setMyLocation() {
+        map.showMyLocation();
     }
 
-    function showDefaultMenuItems() {
-        mainNav.html(defaultMenuItems);
+    function changeWorkState() {
+        courier.toggleWorkState(setWorkState);
+    }
+
+    function setWorkState(state) {
+        setButton({
+            id: "work-state",
+            label: courier.isAvailable() ? "Available" : "Not Available",
+            active: courier.isAvailable()});
+    }
+
+    function changeRadar() {
+        map.toggleNearbyCouriers(function(active) {
+            setButton({id: "radar", active: active});
+        });
     }
 
     function showNewDelivery() {
@@ -293,73 +311,24 @@ TIRAMIZOO.navigation = (function (app, $) {
             {id:"decline-delivery", label:"Decline", icon:"decline"}]);
     }
 
-    function acceptDelivery() {
-        workflow.acceptDelivery(function(success) {
-            if (success) {
-                setMenuItems([
-                    {id:"arrived-at-pickup", label:"Arrived At Pickup", icon:"accept"},
-                    {id:"service-time", label:"Service Time", icon:"time"},
-                    {id:"cancel", label:"Cancel", icon:"decline"}]);
-            } else {
-                map.hideRoute();
-                setDefaultMenuItems();
-            }
-        });
+    function showDeliveryAccepted() {
+        setMenuItems([
+            {id:"arrived-at-pickup", label:"Arrived At Pickup", icon:"accept"},
+            {id:"service-time", label:"Service Time", icon:"time"},
+            {id:"cancel", label:"Cancel", icon:"decline"}]);
     }
 
-    function declineDelivery() {
-        workflow.declineDelivery(function() {
-            showDefaultState();
-        });
+    function showArrivedAtPickUp() {
+        setMenuItems([
+            {id:"arrived-at-dropoff", label:"Arrived At Dropoff", icon:"accept"},
+            {id:"service-time", label:"Service Time", icon:"time"},
+            {id:"cancel", label:"Cancel", icon:"decline"}]);
     }
 
-    function arrivedAtPickUp() {
-        workflow.arrivedAtPickUp(function() {
-            setMenuItems([
-                {id:"arrived-at-dropoff", label:"Arrived At Dropoff", icon:"accept"},
-                {id:"service-time", label:"Service Time", icon:"time"},
-                {id:"cancel", label:"Cancel", icon:"decline"}]);
-        });
-    }
-
-    function arrivedAtDropOff() {
-        workflow.arrivedAtDropOff(function() {
-            setMenuItems([
-                {id:"bill", label:"Go To Billing", icon:"accept"},
-                {id:"cancel", label:"Cancel", icon:"decline"}]);
-        });
-    }
-
-    function bill() {
-        showDefaultState();
-        workflow.bill();
-    }
-
-    function cancel() {
-        workflow.cancel(function() {
-            showDefaultState();
-        });
-    }
-
-    function setLocation() {
-        map.showMyLocation();
-    }
-
-    function changeState() {
-        courier.toggleWorkState(setState);
-    }
-
-    function setState(state) {
-        setButton({
-            id: "state",
-            label: courier.isAvailable() ? "Available" : "Not Available",
-            active: courier.isAvailable()});
-    }
-
-    function changeRadar() {
-        map.toggleRadar(function(active) {
-            setButton({id: "radar", active: active});
-        });
+    function showArrivedAtDropOff() {
+        setMenuItems([
+            {id:"bill", label:"Go To Billing", icon:"accept"},
+            {id:"cancel", label:"Cancel", icon:"decline"}]);
     }
 
     function setButton(options) {
@@ -414,15 +383,18 @@ TIRAMIZOO.navigation = (function (app, $) {
         defaultMenuItems = newDefaultMenuItems;
     }
 
-    $(document).ready(function() {
-        setupNavigation();
-    });
+    function showDefaultState() {
+        mainNav.html(defaultMenuItems);
+    }
 
     return  {
-        setState: setState,
         setDefaultMenuItems: setDefaultMenuItems,
-        showDefaultState: showDefaultState,
-        showNewDelivery: showNewDelivery
+        setWorkState: setWorkState,
+        showNewDelivery: showNewDelivery,
+        showDeliveryAccepted: showDeliveryAccepted,
+        showArrivedAtPickUp: showArrivedAtPickUp,
+        showArrivedAtDropOff: showArrivedAtDropOff,
+        showDefaultState: showDefaultState
     }
 }(TIRAMIZOO, jQuery));
 
@@ -435,27 +407,47 @@ TIRAMIZOO.index = (function (app, $) {
     navigation = app.navigation,
     map = app.map;
 
+    function init(options) {
+        navigation.setDefaultMenuItems(options.defaultMenuItems);
+        navigation.setWorkState(options.workState);
+
+        events.add("defaultState", onDefaultState);
+        events.add("newDelivery", onNewDelivery);
+        events.add("deliveryAccepted", onDeliveryAccepted);
+        events.add("deliveryNotAccepted", onDeliveryNotAccepted);
+        events.add("arrivedAtPickUp", onArrivedAtPickUp);
+        events.add("arrivedAtDropOff", onArrivedAtDropOff);
+    }
+
+    function onDefaultState(event, data) {
+        navigation.showDefaultState();
+        map.showDefaultState();
+    }
+
     function onNewDelivery(event, data) {
         navigation.showNewDelivery();
-        map.hideNearbyCouriers();
+        map.showDefaultState();
         map.showRoute(data.pickup.location.position, data.dropoff.location.position);
     }
 
-    function onDeliveryNotAccepted(event, data) {
-        map.hideRoute();
-        navigation.showDefaultState();
+    function onDeliveryAccepted(event, data) {
+        navigation.showDeliveryAccepted();
     }
 
-    function init(options) {
-        navigation.setState(options.workState);
-        navigation.setDefaultMenuItems(options.defaultMenuItems);
-        
-        events.add("newDelivery", onNewDelivery);
-        events.add("deliveryNotAccepted", onDeliveryNotAccepted);
+    function onDeliveryNotAccepted(event, data) {
+        navigation.showDefaultState();
+        map.showDefaultState();
+    }
+
+    function onArrivedAtPickUp(event, data) {
+        navigation.showArrivedAtPickUp();
+    }
+
+    function onArrivedAtDropOff(event, data) {
+        navigation.showArrivedAtDropOff();
     }
 
     return {
         init: init
     }
-
 }(TIRAMIZOO, jQuery));

@@ -1,7 +1,7 @@
 (function () {
     var toPage = "<%= @mobile_redirect_path %>";
-    if (toPage == "/") {
-       $(window).attr("location", "/");
+    if (toPage == "<%= root_path %>") {
+       window.location.href = "#";
     } else {
        $.mobile.changePage(toPage, "slide", false, true);
     }

@@ -3,20 +3,19 @@ tiramizooTest = function (app, $) {
 
     function newDelivery() {
         pubsub.publish({
-            channel:"delivery-channel-1",
-            action:"new_delivery",
+            channel:"delivery-1",
+            action:"delivery_offer",
                 data: {
                     id: 1,
-                    directions: "3,4 km to destination",
                     pickup: {
                         location: {
                             position: {
-                                latitude: 48.1359717,
-                                longitude: 11.572207
+                                latitude: 48.13307,
+                                longitude: 11.57463
                             },
                             address: {
-                                street: "Sendlinger Straße 7",
-                                zip: "80331",
+                                street: "Müllerstr. 42",
+                                zip: "80469",
                                 city: "München"
                             }
                         },

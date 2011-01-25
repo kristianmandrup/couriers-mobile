@@ -2,16 +2,17 @@ TiramizooCourierApp::Application.routes.draw do
 
   root :to => "main#index"
 
-  match "courier/state" => "couriers#state", :via => [:get, :post]
+  match "courier/info" => "couriers#info", :via => [:get]
+  match "courier/state" => "couriers#state", :via => [:post]
   match "courier/location" => "couriers#location", :via => [:post]
-  match "courier/deliveries/:id/state" => "couriers#delivery_state", :via => :post
-
-  resource :billings, :only => [:edit, :update]
-
   match "location/nearby_couriers" => "couriers#nearby_couriers", :via => :get
 
-  match "deliveries" => "deliveries#index"
+  match "courier/deliveries" => "deliveries#index", :as => "deliveries"
+  match "courier/deliveries/:id/info" => "deliveries#delivery_info", :via => :get
+  match "courier/deliveries/:id/state" => "deliveries#delivery_state", :via => :post
+  match "courier/delivery_offers/:id/response" => "deliveries#delivery_offer_response", :via => :post
 
+  resource :billings, :only => [:edit, :update]
   resource :settings, :only => [:edit, :update]
 
   # The priority is based upon order of creation:
