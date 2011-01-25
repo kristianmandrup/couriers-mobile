@@ -16,16 +16,22 @@ return {
 --------------------------------------------------------------------------------
 Courier:
 --------------------------------------------------------------------------------
-Get current courier state
+Get current courier info
 
-courier/state :get, :put
+courier/info :get
+{
+    work_state: "available|not_available"
+	current_delivery: > courier/deliveries/{current_delivery_id}/info
+}
+
+--------------------------------------------------------------------------------
+Set current courier state
+
+courier/state :put
 {
 	work_state: "available|not_available"
-	current_delivery: 	{
-							state: "ready|accepted|declined|cancelled|arrived_at_pickup|arrived_at_dropoff|billed",
-							id: "1"
-						}
 }
+
 --------------------------------------------------------------------------------
 Set current courier location
 
@@ -38,11 +44,13 @@ courier/location :put
 }
 --------------------------------------------------------------------------------
 Get details about a specific delivery
+Send back different data depending on the state of the delivery.
+In accepted state pickup.contact and dropoff.contact are not sent back
 
-courier/deliveries/1/state :get
+courier/deliveries/1/info :get
 {
     id: "1",
-	directions: "3,5km to target",
+    state: "accepted|cancelled|arrived_at_pickup|arrived_at_dropoff|billed"
 	pickup:		{
 					location:	{
 									position: 	{
@@ -87,20 +95,28 @@ courier/deliveries/1/state :get
 				}
 }
 --------------------------------------------------------------------------------
-Set the state of a specific delivery
+Set response for a specific delivery offer:
+
+courier/delivery_offers/1/response :put
+{
+	response: "accepted|declined"
+}
+--------------------------------------------------------------------------------
+Set the state of a specific delivery:
 
 courier/deliveries/1/state :put
 {
-	state: "ready|accepted|declined|cancelled|arrived_at_pickup|arrived_at_dropoff|billed"
+	state: "cancelled|arrived_at_pickup|arrived_at_dropoff|billed"
 	location:	{
 					longitude: -34.397,
 					latitude: 150.644
 				}
 }
-################################################################################
-Couriers:
+
 --------------------------------------------------------------------------------
-Get locations of all couriers within my radius
+Locations:
+--------------------------------------------------------------------------------
+Get locations of all couriers within my radius:
 
 location/nearby_couriers :get,
 params: {
@@ -128,17 +144,17 @@ params: {
 		vehicle: "bike|cargobike|motorbike|car|van"
 	}
 ]
+
 ################################################################################
 TIRAMIZOO PUB/SUB (Pubnub.com) API
 ################################################################################
-Push new delivery from server to client
+Push new delivery offer from server to client:
 
-channel: 1-delivery-channel (#{id}-delivery-channel)
+channel: delivery-#{courier_id}
 {
-    action: "new_delivery",
+    action: "delivery_offer",
     data: {
         id: "1",
-        directions: "3,5km to target",
         pickup:		{
                         location:	{
                                         position: 	{

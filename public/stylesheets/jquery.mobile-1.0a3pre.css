@@ -288,12 +288,12 @@
 	text-shadow: 0 1px 0 	#fff;
 	background: 			#f0f0f0;
 	background-image: -moz-linear-gradient(, 
-							#fff, 
-							#f0f0f0);
+							#eeeeee, 
+							#dddddd);
 	background-image: -webkit-gradient(linear,left top,left bottom,
-		color-stop(0, 		#fff),
-		color-stop(1, 		#f0f0f0));
-	-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorStr='#ffffff', EndColorStr='#f0f0f0')";
+		color-stop(0, 		#eeeeee),
+		color-stop(1, 		#dddddd));
+	-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorStr='#eeeeee', EndColorStr='#dddddd')";
 }
 .ui-body-c,
 .ui-body-c input,
@@ -319,7 +319,7 @@
 	text-shadow: 0 1px 1px #f6f6f6;
 	text-decoration: none;
 	background-image: -moz-linear-gradient(, 
-							#fdfdfd, 
+							#fefefe, 
 							#eeeeee);
 	background-image: -webkit-gradient(linear,left top,left bottom,
 		color-stop(0, 		#fdfdfd),
@@ -331,19 +331,19 @@
 }
 
 .ui-btn-hover-c {
-	border: 1px solid 		#aaa;
-	background: 			#f5f5f5;
+	border: 1px solid 		#bbb;
+	background: 			#dadada;
 	font-weight: bold;
-	color: 					#111111;
+	color: 					#101010;
 	text-decoration: none;
 	text-shadow: 0 1px 1px 	#fff;
 	background-image: -moz-linear-gradient(, 
-							#ffffff, 
-							#f5f5f5);
+							#ededed, 
+							#dadada);
 	background-image: -webkit-gradient(linear,left top,left bottom,
-		color-stop(0, 		#ffffff),
-		color-stop(1, 		#f5f5f5));
-	-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorStr='#ffffff', EndColorStr='#f5f5f5')";
+		color-stop(0, 		#ededed),
+		color-stop(1, 		#dadada));
+	-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorStr='#ededed', EndColorStr='#dadada')";
 }
 .ui-btn-hover-c a.ui-link-inherit {
 	color: 					#2F3E46;
@@ -633,6 +633,7 @@ a.ui-link-inherit {
 		color-stop(0, 		#85bae4),
 		color-stop(1, 		#5393c5));
   	-msfilter: "progid:DXImageTransform.Microsoft.gradient(startColorStr='#85bae4', EndColorStr='#5393c5')";
+  	outline: none;
 }
 .ui-btn-active a.ui-link-inherit {
 	color: 					#fff;
@@ -992,7 +993,6 @@ a.ui-link-inherit {
 -----------------------------------------------------------------------------------------------------------*/
 
 .ui-focus {
-	outline-width: 0;
 	-moz-box-shadow: 0px 0px 12px 		#387bbe;
 	-webkit-box-shadow: 0px 0px 12px 	#387bbe;
 	box-shadow: 0px 0px 12px 			#387bbe;
@@ -1377,7 +1377,7 @@ Built by David Kaneda and maintained by Jonathan Stark.
 .ui-navbar-collapsed ul { float: left; width: 75%; margin-right: -2px; }
 .ui-navbar-collapsed .ui-navbar-toggle { float: left; width: 25%; }
 .ui-navbar li.ui-navbar-truncate { position: absolute; left: -9999px; top: -9999px; }
-.ui-navbar li .ui-btn, .ui-navbar .ui-navbar-toggle .ui-btn { display: block; font-size: 12px; text-align: center; margin: 0; outline: none; border-right-width: 0; }
+.ui-navbar li .ui-btn, .ui-navbar .ui-navbar-toggle .ui-btn { display: block; font-size: 12px; text-align: center; margin: 0; border-right-width: 0; }
 .ui-navbar li .ui-btn {  margin-right: -1px; }
 .ui-navbar li .ui-btn:last-child { margin-right: 0; }
 .ui-header .ui-navbar li .ui-btn, .ui-header .ui-navbar .ui-navbar-toggle .ui-btn,
@@ -1399,7 +1399,6 @@ Built by David Kaneda and maintained by Jonathan Stark.
 * Dual licensed under the MIT (MIT-LICENSE.txt) or GPL (GPL-LICENSE.txt) licenses.
 */
 .ui-btn { display: block; text-align: center; cursor:pointer;  position: relative; margin: .5em 5px; padding: 0; }
-.ui-btn:focus, .ui-btn a:focus { outline: none; }
 .ui-header .ui-btn, .ui-footer .ui-btn, .ui-bar .ui-btn { display: inline-block; font-size: 13px; margin: 0; }
 .ui-btn-inline { display: inline-block; }
 .ui-btn-inner { padding: .6em 25px; display: block; height: 100%; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; position: relative; }

@@ -3,8 +3,32 @@
     %h1 Billing
   %div{"data-role" => "content"}
     %form
+      %table
+        %tr
+          %td Base Price
+          %td{"class" => "align-right"} 7,50 Euro
+          %td
+        %tr
+          %td 15 min. Service Time at Pickup
+          %td{"class" => "align-right"} 5 Euro
+          %td
+            = link_to "Change", "#", "data-role" => "button", "data-icon" => "check", "data-inline" => "true", "data-theme" => "a", "class" => "form-button-newline"
+        %tr
+          %td 10 min. Service Time at Dropoff
+          %td{"class" => "align-right"} 3 Euro
+          %td
+            = link_to "Change", "#", "data-role" => "button", "data-icon" => "check", "data-inline" => "true", "data-theme" => "a", "class" => "form-button-newline"
+        %tr
+          %td{"class" => "strong"}
+            %div{"data-role" => "fieldcontain"}
+            %label{"for" => "base_price"} Total Price
+          %td{"class" => "strong align-right"}
+            %div{"data-role" => "fieldcontain"}
+            %label{"for" => "base_price"} 15,50 Euro
+          %td
+
       %fielset{"class" => "ui-grid-a"}
-      %div{"class" => "ui-block-a"}
-        %a{"href" => "#", "data-back" => "true", "data-role" => "button", "data-icon" => "minus"} Cancel
-      %div{"class" => "ui-block-b"}
-        = link_to "save", "#", "data-role" => "button", "data-icon" => "check", "data-remote-url" => billings_path, :remote => true, :method => :put
+        %div{"class" => "ui-block-a"}
+          = link_to "Send", "#", "data-role" => "button", "data-icon" => "check", "data-theme" => "a", "data-remote-url" => billings_path, :remote => true, :method => :put
+        %div{"class" => "ui-block-b"}
+          = link_to "Signature", "#", "data-role" => "button", "data-icon" => "check", "data-theme" => "a"

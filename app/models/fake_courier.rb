@@ -36,7 +36,7 @@ class FakeCourier
                 "latitude" => 48.14978394834768,
                 "longitude" => 11.57573014497757
             },
-        "vehicle" => "bike|cargobike|motorbike|car|van"
+        "vehicle" => "bike"
       },
       {
         "id" => "2",
@@ -44,7 +44,7 @@ class FakeCourier
                 "latitude" => 48.13922104853906,
                 "longitude" => 11.56599909067154
             },
-        "vehicle" => "bike|cargobike|motorbike|car|van"
+        "vehicle" => "car"
       }
     ]
   end

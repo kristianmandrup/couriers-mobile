@@ -1,23 +1,23 @@
-%div{"data-role" => "page", "class" => "page"}
+%div{"data-role" => "page"}
   %div{"data-role" => "header"}
     %h1 Settings
-  %div{"data-role" => "content", "class" => "page-content"}
+  %div{"data-role" => "content"}
     %form
-      %div{"data-role" => "fieldcontain", "data-theme" => "c"}
+      %div{"data-role" => "fieldcontain"}
         %label{"for" => "username"} Username:
-        %input{"type" => "text", "name" => "username", "id" => "username"}
+        %input{"type" => "text", "name" => "username", "id" => "username", "data-theme" => "d"}
 
-      %div{"data-role" => "fieldcontain", "data-theme" => "c"}
+      %div{"data-role" => "fieldcontain"}
         %label{"for" => "username"} Password:
-        %input{"type" => "text", "name" => "password", "id" => "password"}
+        %input{"type" => "text", "name" => "password", "id" => "password",  "data-theme" => "d"}
 
       %div{"data-role" => "fieldcontain", "class" => "ui-select-group"}
         %label{"for" => "vehicle"} Vehicle:
-        %select{"name" => "vehicle", "id" => "vehicle"}
+        %select{"name" => "vehicle", "id" => "vehicle", "data-theme" => "d"}
           %option{"value" => "bike"} Bike
           %option{"value" => "cargobike"} Cargobike
           %option{"value" => "motorbike"} Motorbike
           %option{"value" => "car"} Car
           %option{"value" => "van"} Van
 
-      = link_to "save", "#", "data-role" => "button", "data-icon" => "check", "data-remote-url" => settings_path, :remote => true, :method => :put
+      = link_to "Save", "#", "data-role" => "button", "data-icon" => "check", "data-theme" => "a", "data-remote-url" => settings_path, :remote => true, :method => :put
