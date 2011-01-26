@@ -14,9 +14,7 @@ tiramizooTest = function (app, $) {
                                 longitude: 11.57463
                             },
                             address: {
-                                street: "Müllerstr. 42",
-                                zip: "80469",
-                                city: "München"
+                                street: "Müllerstr. 42"
                             }
                         },
                         notes: "Big box"
@@ -28,9 +26,7 @@ tiramizooTest = function (app, $) {
                                 longitude: 11.5758714
                             },
                             address: {
-                                street: "Türkenstraße 60",
-                                zip: "80799",
-                                city: "München"
+                                street: "Türkenstraße 60"
                             }
                         },
                         notes: "Big box"

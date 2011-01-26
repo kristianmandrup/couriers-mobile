@@ -6,12 +6,11 @@ class SettingsController < ApplicationController
 
   def update
     #if @settings.update_attributes(params[:settings])
-      
+      #render :update do |page|
+        #page.redirect_to root_url
+      #end
     #end
-
-    render :update do |page|
-      page.redirect_to root_url
-    end
+    mobile_redirect_to root_path
   end
 
 end

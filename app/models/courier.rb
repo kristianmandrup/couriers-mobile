@@ -11,28 +11,28 @@ class Courier
     call_api :get, "courier/info"
   end
 
-  def set_state(state)
-    call_api :put, "courier/state", state
+  def set_state(params)
+    call_api :put, "courier/state", params
   end
 
-  def set_location(location)
-    call_api :put, "courier/location", location
+  def set_location(params)
+    call_api :put, "courier/location", params
   end
 
   def nearby_couriers
     call_api :get, "location/nearby_couriers"
   end
 
-  def get_delivery_info(delivery)
-    call_api :get, "courier/deliveries/#{delivery[:id]}/info"
+  def get_delivery_info(id)
+    call_api :get, "courier/deliveries/#{id}/info"
   end
 
-  def set_delivery_state(delivery)
-    call_api :put, "courier/deliveries/#{delivery[:id]}/state"
+  def set_delivery_state(params)
+    call_api :put, "courier/deliveries/#{params[:id]}/state"
   end
 
-  def set_delivery_offer_response(delivery)
-    call_api :put, "courier/delivery_offers/#{delivery[:id]}/state", delivery
+  def set_delivery_offer_response(params)
+    call_api :put, "courier/delivery_offers/#{params[:id]}/state", params
   end
 
 end

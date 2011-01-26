@@ -9,7 +9,7 @@
         %li
           = link_to "Deliveries", deliveries_path, "id" => "deliveries", "data-icon" => "deliveries"
         %li
-          = link_to "", "#", "id" => "work-state", "data-icon" => "state"
+          = link_to "", "#", "id" => "work-state", "data-icon" => "work-state"
         %li
           = link_to "Radar", "#", "id" => "radar", "data-icon" => "radar"
         %li
@@ -18,11 +18,6 @@
 = javascript_include_tag "index"
 :javascript
   $(".page-index").live("pagecreate", function() {
-    TIRAMIZOO.main.init({
-      courierID: '#{@current_courier.id}'
-    });
-    TIRAMIZOO.index.init({
-      workState: '#{@courier_state["work_state"]}',
-      defaultMenuItems: $("#main-nav ul:first")
-    });
+    TIRAMIZOO.main.init({courierInfo:JSON.parse('#{@courier_info.to_json}')});
+    TIRAMIZOO.index.init({defaultMenuItems: $("#main-nav ul:first")});
   });

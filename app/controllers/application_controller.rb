@@ -15,8 +15,4 @@ class ApplicationController < ActionController::Base
     render "application/redirect"
   end
 
-  def render_json(obj)
-    render :json => obj
-  end
-  
 end

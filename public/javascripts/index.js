@@ -1,63 +1,36 @@
 /**
- * Functions for controlling the Google Map
+ * Functions for Geolocation API
  */
-TIRAMIZOO.namespace("map");
-TIRAMIZOO.map = (function (app, $) {
-    var courier = app.courier,
-    map,
-    initialLocation = new google.maps.LatLng(48.1359717, 11.572207),
-    mapOptions = {
-        zoom: 15,
-        center: initialLocation,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        mapTypeControl: false,
-        mapTypeControlOptions: {
-            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-            position: google.maps.ControlPosition.LEFT_CENTER
-        },
-        navigationControl: true,
-        navigationControlOptions: {
-            style: google.maps.NavigationControlStyle.ZOOM_PAN,
-            position: google.maps.ControlPosition.LEFT_CENTER
-        },
-        scaleControl: true,
-        scaleControlOptions: {
-            position: google.maps.ControlPosition.LEFT_CENTER
-        }
-    },
-    geolocation,
+TIRAMIZOO.namespace("geolocation");
+TIRAMIZOO.geolocation = (function (app, $) {
+    var geolocation,
     geolocationOptions = {
         enableHighAccuracy: false,
         maximumAge: 30000,
         timeout: 30000},
-    directionsRenderer,
-    currentLocationMarker,
-    nearbyCourierMarkers;
+    geolocationID,
+    updatePositionCallback;
 
-    $(document).ready(function() {
-        setupMap();
-        setupGeolocation();
-    });
-
-    function setupMap() {
-        map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
-        currentLocationMarker = new google.maps.Marker({map: map, position: initialLocation, title: "YOU!"});
-        updatePosition({latitude: initialLocation.lat(), longitude: initialLocation.lng()});
+    function init(newUpdatePositionCallback) {
+        updatePositionCallback = newUpdatePositionCallback;
+        start();
     }
 
-    function setupGeolocation() {
+    function start() {
         geolocation = navigator.geolocation;
         app.log(geolocation ? "hasGeolocation" : "noGeolocation");
         if (geolocation) {
+            if (geolocationID) {
+                geolocation.clearWatch(geolocationID);
+            }
             getCurrentPosition();
-            geolocation.watchPosition(geolocationChanged, geolocationError, geolocationOptions);
+            geolocationID = geolocation.watchPosition(geolocationChanged, geolocationError, geolocationOptions);
         } else {
             geolocationError({code:"general"});
         }
     }
 
     function getCurrentPosition() {
-        app.log("getCurrentPosition");
         geolocation.getCurrentPosition(geolocationSuccess, geolocationError, geolocationOptions);
     }
 
@@ -90,15 +63,61 @@ TIRAMIZOO.map = (function (app, $) {
         }
     }
 
-    function updateGeoPosition() {
-        updatePosition({latitude: position.coords.latitude, longitude: position.coords.latitude});
+    function updateGeoPosition(geoPosition) {
+        updatePositionCallback(geoPosition.coords.latitude, geoPosition.coords.longitude);
     }
 
-    function updatePosition(position) {
-        var currentLocation = new google.maps.LatLng(position.latitude, position.longitude);
+    return {
+        init: init
+    }
+}(TIRAMIZOO, jQuery));
+
+/**
+ * Functions for controlling the Google Map
+ */
+TIRAMIZOO.namespace("map");
+TIRAMIZOO.map = (function (app, $) {
+    var courier = app.courier,
+    geolocation = app.geolocation,
+    g = google.maps,
+    map,
+    mapOptions = {
+        zoom: 15,
+        center: new g.LatLng(48.1359717, 11.572207),
+        mapTypeId: g.MapTypeId.ROADMAP,
+        mapTypeControl: false,
+        mapTypeControlOptions: {
+            style: g.MapTypeControlStyle.HORIZONTAL_BAR,
+            position: g.ControlPosition.LEFT_CENTER
+        },
+        navigationControl: true,
+        navigationControlOptions: {
+            style: g.NavigationControlStyle.ZOOM_PAN,
+            position: g.ControlPosition.LEFT_CENTER
+        },
+        scaleControl: true,
+        scaleControlOptions: {
+            position: g.ControlPosition.LEFT_CENTER
+        }
+    },
+    currentLocationMarker,
+    nearbyCourierMarkers,
+    directionsRenderer,
+    routeFromPosition,
+    routeToPosition;
+
+    $(document).ready(function() {
+        map = new g.Map(document.getElementById("map-canvas"), mapOptions);
+        currentLocationMarker = new g.Marker({map: map, position: mapOptions.center, title: "YOU!"});
+        updatePosition(mapOptions.center.lat(), mapOptions.center.lng());
+        geolocation.init(updatePosition);
+    });
+
+    function updatePosition(latitude, longitude) {
+        var currentLocation = new g.LatLng(latitude, longitude);
         currentLocationMarker.setPosition(currentLocation);
         map.setCenter(currentLocation);
-        courier.setPosition(position);
+        courier.setPosition({latitude: latitude, longitude: longitude});
     }
 
     function showMyLocation() {
@@ -122,34 +141,23 @@ TIRAMIZOO.map = (function (app, $) {
                 });
     }
 
-    function showNearbyCouriers(courierLocations) {
-        var courierMarker,
-        courierLocation,
-        courierPosition;
+    function showNearbyCouriers(couriers) {
+        var courierData,
+        nearbyCourierLocation,
+        nearbyCourierLocations = [];
 
         nearbyCourierMarkers = [];
-        for (var i = 0, max = courierLocations.length; i < max; i++) {
-            courierLocation = courierLocations[i];
-            courierPosition = new google.maps.LatLng(courierLocation.position.latitude, courierLocation.position.longitude);
-            courierMarker = new google.maps.Marker({
+        for (var i = 0, max = couriers.length; i < max; i++) {
+            courierData = couriers[i];
+            nearbyCourierLocation = new g.LatLng(courierData.position.latitude, courierData.position.longitude);
+            nearbyCourierMarkers.push(new g.Marker({
                 map: map,
-                position: courierPosition,
-                title: courierLocation.id,
-                icon: "../images/icon-" + courierLocation.vehicle + ".png"});
-            nearbyCourierMarkers.push(courierMarker);
+                position: nearbyCourierLocation,
+                title: courierData.id,
+                icon: "../images/icon-" + courierData.vehicle + ".png"}));
+            nearbyCourierLocations.push(nearbyCourierLocation);
         }
-        fitMapToMarkers(nearbyCourierMarkers);
-    }
-
-    function fitMapToMarkers(markers) {
-        if (markers.length == 0) {
-            return;
-        }
-        var bounds = new google.maps.LatLngBounds();
-        for (var i = 0, max = markers.length; i < max; i++) {
-          bounds.extend(markers[i].getPosition());
-        }
-        map.fitBounds(bounds);
+        fitToLocations(nearbyCourierLocations);
     }
 
     function hideNearbyCouriers() {
@@ -158,49 +166,6 @@ TIRAMIZOO.map = (function (app, $) {
                 nearbyCourierMarkers[i].setMap(null);
             }
             nearbyCourierMarkers = null;
-        }
-    }
-
-    function showRoute(pickUpLocation, dropOffLocation) {
-        console.log("showRoute", pickUpLocation, dropOffLocation);
-        var courier = app.courier,
-        travelMode,
-        directionsService = new google.maps.DirectionsService(),
-        directionsRequest;
-       
-        directionsRenderer = new google.maps.DirectionsRenderer();
-        directionsRenderer.setMap(map);
-
-        switch (courier.getTravelMode()) {
-            case courier.BIKING:
-                travelMode = google.maps.DirectionsTravelMode.BICYCLING;
-                break;
-            case courier.DRIVING:
-            default:
-                travelMode = google.maps.DirectionsTravelMode.DRIVING;
-                break;
-        }
-
-        directionsRequest = {
-            origin: currentLocationMarker.getPosition(),
-            waypoints: [{location: new google.maps.LatLng(pickUpLocation.latitude, pickUpLocation.longitude)}],
-            optimizeWaypoints: true,
-            destination: new google.maps.LatLng(dropOffLocation.latitude, dropOffLocation.longitude),
-            travelMode: travelMode,
-            unitSystem: google.maps.DirectionsUnitSystem.METRIC
-        };
-
-        directionsService.route(directionsRequest, function(response, status) {
-            if (status == google.maps.DirectionsStatus.OK) {
-                directionsRenderer.setDirections(response);
-            }
-        });
-    }
-
-    function hideRoute() {
-        if (directionsRenderer) {
-            directionsRenderer.setMap(null);
-            directionsRenderer = null;
         }
     }
 
@@ -215,15 +180,97 @@ TIRAMIZOO.map = (function (app, $) {
         }
     }
 
+    function routeAlreadyCalculate(fromPosition, toPosition) {
+        if (routeFromPosition && routeToPosition) {
+            if (fromPosition.latitude == routeFromPosition.latitude &&
+                fromPosition.longitude == routeFromPosition.longitude &&
+                toPosition.latitude == routeToPosition.latitude &&
+                toPosition.longitude == routeToPosition.longitude) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function showRoute(pickUpPosition, dropOffPosition) {
+        if (routeAlreadyCalculate(pickUpPosition, dropOffPosition)) {
+            return;
+        }
+
+        var travelMode,
+        directionsService = new g.DirectionsService(),
+        directionsRequest;
+       
+        directionsRenderer = new g.DirectionsRenderer();
+        directionsRenderer.setMap(map);
+
+        switch (courier.getTravelMode()) {
+            case courier.BIKING:
+                travelMode = g.DirectionsTravelMode.BICYCLING;
+                break;
+            case courier.DRIVING:
+            default:
+                travelMode = g.DirectionsTravelMode.DRIVING;
+                break;
+        }
+
+        directionsRequest = {
+            origin: currentLocationMarker.getPosition(),
+            waypoints: [{location: new g.LatLng(pickUpPosition.latitude, pickUpPosition.longitude)}],
+            optimizeWaypoints: true,
+            destination: new g.LatLng(dropOffPosition.latitude, dropOffPosition.longitude),
+            travelMode: travelMode,
+            unitSystem: g.DirectionsUnitSystem.METRIC
+        };
+
+        directionsService.route(directionsRequest, function(response, status) {
+            if (status == g.DirectionsStatus.OK) {
+                directionsRenderer.setDirections(response);
+                routeFromPosition = pickUpPosition;
+                routeToPosition = dropOffPosition;
+            }
+        });
+    }
+
+    function hideRoute() {
+        if (directionsRenderer) {
+            directionsRenderer.setMap(null);
+            directionsRenderer = null;
+        }
+        routeFromPosition = null;
+        routeToPosition = null;
+    }
+
+    function fitToLocations(locations) {
+        if (locations.length == 0) {
+            return;
+        }
+        var bounds = new g.LatLngBounds();
+        for (var i = 0, max = locations.length; i < max; i++) {
+          bounds.extend(locations[i]);
+        }
+        map.fitBounds(bounds);
+    }
+
+    function fitToPositions(positions) {
+        var locations = [];
+        for (var i = 0, max = positions.length; i < max; i++) {
+            locations.push(new g.LatLng(positions[i].latitude, positions[i].longitude));
+        }
+        fitToLocations(locations);
+    }
+
     function showDefaultState() {
         hideRoute();
         hideNearbyCouriers();
+        map.setZoom(mapOptions.zoom);
     }
 
     return  {
         showMyLocation: showMyLocation,
         toggleNearbyCouriers: toggleNearbyCouriers,
         showRoute: showRoute,
+        fitToPositions: fitToPositions,
         showDefaultState: showDefaultState
     }
 }(TIRAMIZOO, jQuery));
@@ -338,7 +385,6 @@ TIRAMIZOO.navigation = (function (app, $) {
         if (options.hasOwnProperty("active") &&
             options.active != btn.data("active")) {
             btn.data("active", options.active);
-            console.log("set button", options.id, options.active);
             if (options.active) {
                 btn.addClass(activeClass);
             } else {
@@ -403,7 +449,8 @@ TIRAMIZOO.navigation = (function (app, $) {
  */
 TIRAMIZOO.namespace("index");
 TIRAMIZOO.index = (function (app, $) {
-    var events = app.events, 
+    var courier = app.courier,
+    events = app.events,
     navigation = app.navigation,
     map = app.map;
 
@@ -417,6 +464,7 @@ TIRAMIZOO.index = (function (app, $) {
         events.add("deliveryNotAccepted", onDeliveryNotAccepted);
         events.add("arrivedAtPickUp", onArrivedAtPickUp);
         events.add("arrivedAtDropOff", onArrivedAtDropOff);
+        events.add("billing", onBilling);
     }
 
     function onDefaultState(event, data) {
@@ -424,27 +472,42 @@ TIRAMIZOO.index = (function (app, $) {
         map.showDefaultState();
     }
 
-    function onNewDelivery(event, data) {
+    function onNewDelivery(event, delivery) {
         navigation.showNewDelivery();
         map.showDefaultState();
-        map.showRoute(data.pickup.location.position, data.dropoff.location.position);
+        showDeliveryRoute(delivery);
     }
 
-    function onDeliveryAccepted(event, data) {
+    function onDeliveryAccepted(event, delivery) {
         navigation.showDeliveryAccepted();
+        showDeliveryRoute(delivery);
+        map.fitToPositions([courier.getPosition(), delivery.pickup.location.position]);
     }
 
-    function onDeliveryNotAccepted(event, data) {
+    function onDeliveryNotAccepted(event, delivery) {
         navigation.showDefaultState();
         map.showDefaultState();
     }
 
-    function onArrivedAtPickUp(event, data) {
+    function onArrivedAtPickUp(event, delivery) {
         navigation.showArrivedAtPickUp();
+        showDeliveryRoute(delivery);
+        map.fitToPositions([delivery.pickup.location.position, delivery.dropoff.location.position]);
     }
 
-    function onArrivedAtDropOff(event, data) {
+    function onArrivedAtDropOff(event, delivery) {
         navigation.showArrivedAtDropOff();
+        showDeliveryRoute(delivery);
+        map.fitToPositions([delivery.dropoff.location.position]);
+    }
+
+    function onBilling(event, data) {
+        navigation.showDefaultState();
+        map.showDefaultState();
+    }
+
+    function showDeliveryRoute(delivery) {
+        map.showRoute(delivery.pickup.location.position, delivery.dropoff.location.position);
     }
 
     return {

@@ -361,7 +361,6 @@ TIRAMIZOO.notifications = (function (app, $) {
         message = pickUpData.pickup.location.address.street
                 + ", " + contact.name + ", "
                 + contact.company_name + ", "
-                + contact.email + ", "
                 + contact.phone + " "
                 + " (" + pickUpData.pickup.notes + ")";
 
@@ -378,7 +377,6 @@ TIRAMIZOO.notifications = (function (app, $) {
         message = dropOffData.dropoff.location.address.street
                 + ", " + contact.name + ", "
                 + contact.company_name + ", "
-                + contact.email + ", "
                 + contact.phone + " "
                 + " (" + dropOffData.dropoff.notes + ")";
 
@@ -394,7 +392,6 @@ TIRAMIZOO.notifications = (function (app, $) {
         contact = billingData.dropoff.contact,
         message = contact.name + ", "
                 + contact.company_name + ", "
-                + contact.email + ", "
                 + contact.phone + " "
                 + " (" + billingData.dropoff.notes + ")";
 
@@ -527,10 +524,10 @@ TIRAMIZOO.workflow.acceptedState = function (app, $) {
     function init(pickUpData) {
         if (pickUpData.status.code == codes.OK) {
             notifications.showPickUp(pickUpData);
-            events.dispatch("deliveryAccepted");
+            events.dispatch("deliveryAccepted", pickUpData);
         } else {
             notifications.showStatus(pickUpData.status);
-            events.dispatch("deliveryNotAccepted");
+            events.dispatch("deliveryNotAccepted", pickUpData);
         }
     }
 
@@ -554,7 +551,7 @@ TIRAMIZOO.workflow.arrivedAtPickUpState = function (app, $) {
 
     function init(dropOffData) {
         notifications.showDropOff(dropOffData);
-        events.dispatch("arrivedAtPickUp");
+        events.dispatch("arrivedAtPickUp", dropOffData);
     }
 
     function arrivedAtDropOff() {
@@ -577,12 +574,13 @@ TIRAMIZOO.workflow.arrivedAtDropOffState = function (app, $) {
 
     function init(billingData) {
         notifications.showBilling(billingData);
-        events.dispatch("arrivedAtDropOff");
+        events.dispatch("arrivedAtDropOff", billingData);
     }
 
     function bill() {
         workflow.setCurrentDelivery(null);
         notifications.hideAll();
+        events.dispatch("billing");
         $.mobile.changePage("/billings/edit");
     }
 
@@ -613,7 +611,9 @@ TIRAMIZOO.workflow = (function (app, $) {
 
     function init(info) {
         currentDelivery = info.currentDelivery;
-        setState(currentDelivery.state, currentDelivery);
+        if (currentDelivery) {
+            setState(currentDelivery.state, currentDeslivery);
+        }
     }
 
     function setState(state, data) {
@@ -707,13 +707,16 @@ TIRAMIZOO.main = (function (app, $) {
     }
 
     function init(options) {
-        courier.init({id: options.courierID, travelMode: "biking"});
-        workflow.init({currentDelivery: {state:"default"}});
+        courier.init({
+                id: options.courierInfo.id,
+                travelMode: options.courierInfo.travel_mode});
+        workflow.init({currentDelivery: options.courierInfo.currentDelivery});
         pubsub.subscribe({channel:"delivery-" + courier.getID(), action:"delivery_offer", callback:onNewDelivery});
         setTimeout(test.newDelivery, 10000);
     }
 
     function onNewDelivery(newDelivery) {
+        console.log(newDelivery);
         workflow.setState("new_delivery", newDelivery);
     }
 

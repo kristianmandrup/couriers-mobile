@@ -22,7 +22,7 @@ courier/info :get
 {
     id: "1",
     work_state: "available|not_available",
-    travelMode: "biking|driving",
+    travel_mode: "biking|driving",
 	current_delivery: > courier/deliveries/{current_delivery_id}/info
 }
 
@@ -167,8 +167,6 @@ channel: delivery-#{courier_id}
                                                     },
                                         address: 	{
                                                         street: "Sendlinger Straße 1",
-                                                        zip: "80331",
-                                                        city: "München"
                                                     }
 
                                     },
@@ -182,8 +180,6 @@ channel: delivery-#{courier_id}
                                                     },
                                         address: 	{
                                                         street: "Sendlinger Straße 2",
-                                                        zip: "80331",
-                                                        city: "München"
                                                     }
 
                                     },
