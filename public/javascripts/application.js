@@ -573,8 +573,9 @@ TIRAMIZOO.workflow.arrivedAtDropOffState = function (app, $) {
     workflow = app.workflow;
 
     function init(billingData) {
-        notifications.showBilling(billingData);
-        events.dispatch("arrivedAtDropOff", billingData);
+        //notifications.showBilling(billingData);
+        //events.dispatch("arrivedAtDropOff", billingData);
+        bill();
     }
 
     function bill() {

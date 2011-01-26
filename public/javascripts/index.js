@@ -223,9 +223,9 @@ TIRAMIZOO.map = (function (app, $) {
             unitSystem: g.DirectionsUnitSystem.METRIC
         };
 
-        directionsService.route(directionsRequest, function(response, status) {
+        directionsService.route(directionsRequest, function(directionsResult, status) {
             if (status == g.DirectionsStatus.OK) {
-                directionsRenderer.setDirections(response);
+                directionsRenderer.setDirections(directionsResult);
                 routeFromPosition = pickUpPosition;
                 routeToPosition = dropOffPosition;
             }
@@ -360,14 +360,14 @@ TIRAMIZOO.navigation = (function (app, $) {
 
     function showDeliveryAccepted() {
         setMenuItems([
-            {id:"arrived-at-pickup", label:"Arrived At Pickup", icon:"accept"},
+            {id:"arrived-at-pickup", label:"Delivery picked up", icon:"accept"},
             {id:"service-time", label:"Service Time", icon:"time"},
             {id:"cancel", label:"Cancel", icon:"decline"}]);
     }
 
     function showArrivedAtPickUp() {
         setMenuItems([
-            {id:"arrived-at-dropoff", label:"Arrived At Dropoff", icon:"accept"},
+            {id:"arrived-at-dropoff", label:"Delivery dropped off", icon:"accept"},
             {id:"service-time", label:"Service Time", icon:"time"},
             {id:"cancel", label:"Cancel", icon:"decline"}]);
     }
