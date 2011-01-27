@@ -7,7 +7,7 @@
         %li
           = link_to "My Location", "#", "id" => "my-location", "data-icon" => "location"
         %li
-          = link_to "Deliveries", deliveries_path, "id" => "deliveries", "data-icon" => "deliveries"
+          = link_to "Deliveries", courier_deliveries_path(@current_courier), "id" => "deliveries", "data-icon" => "deliveries"
         %li
           = link_to "", "#", "id" => "work-state", "data-icon" => "work-state"
         %li
@@ -18,6 +18,6 @@
 = javascript_include_tag "index"
 :javascript
   $(".page-index").live("pagecreate", function() {
-    TIRAMIZOO.main.init({courierInfo:JSON.parse('#{@courier_info.to_json}')});
+    TIRAMIZOO.main.init({courierInfo:JSON.parse(#{courier_info_json})});
     TIRAMIZOO.index.init({defaultMenuItems: $("#main-nav ul:first")});
   });

@@ -2,15 +2,23 @@ TiramizooCourierApp::Application.routes.draw do
 
   root :to => "main#index"
 
-  match "courier/info" => "couriers#info", :via => [:get]
-  match "courier/state" => "couriers#state", :via => [:post]
-  match "courier/location" => "couriers#location", :via => [:post]
-  match "location/nearby_couriers" => "couriers#nearby_couriers", :via => :get
+  resources :couriers, :only => [] do
+    member do
+      get :info
+      post :state
+      post :location
+    end
 
-  match "courier/deliveries" => "deliveries#index", :as => "deliveries"
-  match "courier/deliveries/:id/info" => "deliveries#delivery_info", :via => :get
-  match "courier/deliveries/:id/state" => "deliveries#delivery_state", :via => :post
-  match "courier/delivery_offers/:id/response" => "deliveries#delivery_offer_response", :via => :post
+    resources :deliveries, :only => [:index] do
+      member do
+        get :info
+        post :state
+      end
+    end
+  end
+
+  match "location/nearby_couriers" => "couriers#nearby_couriers", :via => :get
+  match "couriers/:courier_id/delivery_offers/:id/answer" => "deliveries#offer_answer", :via => :post
 
   resource :billings, :only => [:edit, :update]
   resource :settings, :only => [:edit, :update]

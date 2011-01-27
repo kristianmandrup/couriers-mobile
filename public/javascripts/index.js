@@ -308,14 +308,11 @@ TIRAMIZOO.navigation = (function (app, $) {
                 case "decline-delivery":
                     workflow.declineDelivery();
                     break;
-                case "arrived-at-pickup":
-                    workflow.arrivedAtPickUp();
+                case "picked-up":
+                    workflow.pickedUp();
                     break;
-                case "arrived-at-dropoff":
-                    workflow.arrivedAtDropOff();
-                    break;
-                case "bill":
-                    workflow.bill();
+                case "delivered":
+                    workflow.delivered();
                     break;
                 case "cancel":
                     workflow.cancel();
@@ -360,28 +357,23 @@ TIRAMIZOO.navigation = (function (app, $) {
 
     function showDeliveryAccepted() {
         setMenuItems([
-            {id:"arrived-at-pickup", label:"Delivery picked up", icon:"accept"},
+            {id:"picked-up", label:"Delivery picked up", icon:"accept"},
             {id:"service-time", label:"Service Time", icon:"time"},
             {id:"cancel", label:"Cancel", icon:"decline"}]);
     }
 
-    function showArrivedAtPickUp() {
+    function showPickedUp() {
         setMenuItems([
-            {id:"arrived-at-dropoff", label:"Delivery dropped off", icon:"accept"},
+            {id:"delivered", label:"Delivered", icon:"accept"},
             {id:"service-time", label:"Service Time", icon:"time"},
-            {id:"cancel", label:"Cancel", icon:"decline"}]);
-    }
-
-    function showArrivedAtDropOff() {
-        setMenuItems([
-            {id:"bill", label:"Go To Billing", icon:"accept"},
             {id:"cancel", label:"Cancel", icon:"decline"}]);
     }
 
     function setButton(options) {
         var btn = $("#" + options.id),
         activeClass = "main-nav-btn-active";
-        
+        activeClass = "main-nav-btn-active";
+
         if (options.hasOwnProperty("active") &&
             options.active != btn.data("active")) {
             btn.data("active", options.active);
@@ -438,8 +430,7 @@ TIRAMIZOO.navigation = (function (app, $) {
         setWorkState: setWorkState,
         showNewDelivery: showNewDelivery,
         showDeliveryAccepted: showDeliveryAccepted,
-        showArrivedAtPickUp: showArrivedAtPickUp,
-        showArrivedAtDropOff: showArrivedAtDropOff,
+        showPickedUp: showPickedUp,
         showDefaultState: showDefaultState
     }
 }(TIRAMIZOO, jQuery));
@@ -462,8 +453,7 @@ TIRAMIZOO.index = (function (app, $) {
         events.add("newDelivery", onNewDelivery);
         events.add("deliveryAccepted", onDeliveryAccepted);
         events.add("deliveryNotAccepted", onDeliveryNotAccepted);
-        events.add("arrivedAtPickUp", onArrivedAtPickUp);
-        events.add("arrivedAtDropOff", onArrivedAtDropOff);
+        events.add("pickedUp", pickedUp);
         events.add("billing", onBilling);
     }
 
@@ -481,7 +471,7 @@ TIRAMIZOO.index = (function (app, $) {
     function onDeliveryAccepted(event, delivery) {
         navigation.showDeliveryAccepted();
         showDeliveryRoute(delivery);
-        map.fitToPositions([courier.getPosition(), delivery.pickup.location.position]);
+        map.fitToPositions([courier.getPosition(), delivery.pickup.position]);
     }
 
     function onDeliveryNotAccepted(event, delivery) {
@@ -489,16 +479,10 @@ TIRAMIZOO.index = (function (app, $) {
         map.showDefaultState();
     }
 
-    function onArrivedAtPickUp(event, delivery) {
-        navigation.showArrivedAtPickUp();
+    function pickedUp(event, delivery) {
+        navigation.showPickedUp();
         showDeliveryRoute(delivery);
-        map.fitToPositions([delivery.pickup.location.position, delivery.dropoff.location.position]);
-    }
-
-    function onArrivedAtDropOff(event, delivery) {
-        navigation.showArrivedAtDropOff();
-        showDeliveryRoute(delivery);
-        map.fitToPositions([delivery.dropoff.location.position]);
+        map.fitToPositions([delivery.pickup.position, delivery.dropoff.position]);
     }
 
     function onBilling(event, data) {
@@ -507,7 +491,7 @@ TIRAMIZOO.index = (function (app, $) {
     }
 
     function showDeliveryRoute(delivery) {
-        map.showRoute(delivery.pickup.location.position, delivery.dropoff.location.position);
+        map.showRoute(delivery.pickup.position, delivery.dropoff.position);
     }
 
     return {

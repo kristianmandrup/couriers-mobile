@@ -5,7 +5,7 @@ module TiramizooApi
     case method
       when :get
         result = RestClient.send method, rest_url, {:accept => :json}
-      when :post
+      when :put
         result = RestClient.send method, rest_url, params.to_json, :content_type => :json, :accept => :json
     end
     result

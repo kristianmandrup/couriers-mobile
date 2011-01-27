@@ -18,7 +18,7 @@ Courier:
 --------------------------------------------------------------------------------
 Get current courier info
 
-courier/info :get
+courier/:id/info :get
 {
     id: "1",
     work_state: "available|not_available",
@@ -29,7 +29,7 @@ courier/info :get
 --------------------------------------------------------------------------------
 Set current courier state
 
-courier/state :put
+courier/:id/state :put
 {
 	work_state: "available|not_available"
 }
@@ -37,7 +37,7 @@ courier/state :put
 --------------------------------------------------------------------------------
 Set current courier location
 
-courier/location :put
+courier/:id/location :put
 {
 	position: 	{
                     latitude: 150.644,
@@ -49,49 +49,39 @@ Get details about a specific delivery
 Send back different data depending on the state of the delivery.
 In accepted state pickup.contact and dropoff.contact are not sent back
 
-courier/deliveries/1/info :get
+courier/:id/deliveries/1/info :get
 {
     id: "1",
-    state: "accepted|cancelled|arrived_at_pickup|arrived_at_dropoff|billed"
+    state: "accepted|cancelled|picked_up|delivered|billed"
 	pickup:		{
-					location:	{
-									position: 	{
-													latitude: 150.644,
-													longitude: -34.397
-												},
-									address: 	{
-													street: "Sendlinger Straﬂe 1",
-													zip: "80331",
-													city: "M¸nchen"
-												}
-										
-								},
-					contact: 	{
+
+                    position: 	{
+                                    latitude: 150.644,
+                                    longitude: -34.397
+                                },
+                    address: 	{
+                                    street: "Sendlinger Straﬂe 1",
+                                },
+                    contact: 	{
 									company_name: "Tiramizoo 1",
 									name: "Michael Lˆhr",
-									email: "michael.loehr@tiramizoo.com",
-									phone: "089123456789"										
+									phone: "089123456789"
 								},
 					notes: "Big box"
 				},						
 	dropoff:	{
-					location:	{
-									position: 	{
-													latitude: 150.644,
-													longitude: -34.397
-												},
-									address: 	{
-													street: "Sendlinger Straﬂe 2",
-													zip: "80331",
-													city: "M¸nchen"
-												}
-										
-								},
+
+                    position: 	{
+                                    latitude: 150.644,
+                                    longitude: -34.397
+                                },
+                    address: 	{
+                                    street: "Sendlinger Straﬂe 2",
+                                },
 					contact: 	{
 									company_name: "Tiramizoo 2",
 									name: "Philipp Walz",
-									email: "philipp.walz@tiramizoo.com",
-									phone: "089987654321"										
+									phone: "089987654321"
 								},
 					notes: "Big box"							
 				}
@@ -99,16 +89,16 @@ courier/deliveries/1/info :get
 --------------------------------------------------------------------------------
 Set response for a specific delivery offer:
 
-courier/delivery_offers/1/response :put
+courier/:id/delivery_offers/1/state :put
 {
-	response: "accepted|declined"
+	state: "accepted|declined"
 }
 --------------------------------------------------------------------------------
 Set the state of a specific delivery:
 
-courier/deliveries/1/state :put
+courier/:id/deliveries/1/state :put
 {
-	state: "cancelled|arrived_at_pickup|arrived_at_dropoff|billed"
+	state: "cancelled|picked_up|delivered|billed"
 	location:	{
 					longitude: -34.397,
 					latitude: 150.644
@@ -160,28 +150,24 @@ channel: delivery-#{courier_id}
     data: {
         id: "1",
         pickup:		{
-                        location:	{
-                                        position: 	{
-                                                        latitude: 150.644,
-                                                        longitude: -34.397
-                                                    },
-                                        address: 	{
-                                                        street: "Sendlinger Straﬂe 1",
-                                                    }
 
+                        position: 	{
+                                        latitude: 150.644,
+                                        longitude: -34.397
+                                    },
+                        address: 	{
+                                        street: "Sendlinger Straﬂe 1",
                                     },
                         notes: "Big box"
                     },
         dropoff:	{
-                        location:	{
-                                        position: 	{
-                                                        latitude: 150.644,
-                                                        longitude: -34.397
-                                                    },
-                                        address: 	{
-                                                        street: "Sendlinger Straﬂe 2",
-                                                    }
 
+                        position: 	{
+                                        latitude: 150.644,
+                                        longitude: -34.397
+                                    },
+                        address: 	{
+                                        street: "Sendlinger Straﬂe 2",
                                     },
                         notes: "Big box"
                     }

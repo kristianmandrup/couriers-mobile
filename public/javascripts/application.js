@@ -181,7 +181,7 @@ TIRAMIZOO.courier = (function (app, $) {
 
     function setState(newWorkState, callback) {
         ajax.postJSON({
-            action: "courier/state",
+            action: "couriers/" + id + "/state",
             params: {work_state: newWorkState},
             callback: function(data) {
                 workState = data.work_state;
@@ -212,7 +212,7 @@ TIRAMIZOO.courier = (function (app, $) {
 
     function setPosition(position) {
         ajax.postJSON({
-            action:"courier/location",
+            action:"couriers/" + id + "/location",
             params: {position:{latitude: position.latitude, longitude: position.longitude}},
             callback: function(data) {
                 currentPosition = position;
@@ -296,8 +296,8 @@ TIRAMIZOO.notifications = (function (app, $) {
     function showNewDelivery(deliveryData) {
         var title = "New Delivery",
         message = "From "
-                + deliveryData.pickup.location.address.street
-                + " to " + deliveryData.dropoff.location.address.street
+                + deliveryData.pickup.address.street
+                + " to " + deliveryData.dropoff.address.street
                 + " (" + deliveryData.pickup.notes + ")";
 
         showGrowl({
@@ -358,7 +358,7 @@ TIRAMIZOO.notifications = (function (app, $) {
     function showPickUp(pickUpData) {
         var title = "Go To Pickup",
         contact = pickUpData.pickup.contact,
-        message = pickUpData.pickup.location.address.street
+        message = pickUpData.pickup.address.street
                 + ", " + contact.name + ", "
                 + contact.company_name + ", "
                 + contact.phone + " "
@@ -374,7 +374,7 @@ TIRAMIZOO.notifications = (function (app, $) {
     function showDropOff(dropOffData) {
         var title = "Go To Dropoff",
         contact = dropOffData.dropoff.contact,
-        message = dropOffData.dropoff.location.address.street
+        message = dropOffData.dropoff.address.street
                 + ", " + contact.name + ", "
                 + contact.company_name + ", "
                 + contact.phone + " "
@@ -432,8 +432,8 @@ TIRAMIZOO.workflow.state = function (app, $) {
     function init(data) { }
     function acceptDelivery() { }
     function declineDelivery() { }
-    function arrivedAtPickUp() { }
-    function arrivedAtDropOff() { }
+    function pickedUp() { }
+    function delivered() { }
     function bill() { }
 
     function cancel() {
@@ -446,8 +446,8 @@ TIRAMIZOO.workflow.state = function (app, $) {
         init: init,
         acceptDelivery: acceptDelivery,
         declineDelivery: declineDelivery,
-        arrivedAtPickUp: arrivedAtPickUp,
-        arrivedAtDropOff: arrivedAtDropOff,
+        pickedUp: pickedUp,
+        delivered: delivered,
         bill: bill,
         cancel: cancel
     }
@@ -471,6 +471,7 @@ TIRAMIZOO.workflow.defaultState = function (app, $) {
 TIRAMIZOO.namespace("workflow.newDeliveryState");
 TIRAMIZOO.workflow.newDeliveryState = function (app, $) {
     var ajax = app.ajax,
+    courier = app.courier,
     events = app.events,
     notifications = app.notifications,
     workflow = app.workflow;
@@ -498,9 +499,10 @@ TIRAMIZOO.workflow.newDeliveryState = function (app, $) {
     }
 
     function setRemoteDeliveryOffer(response, callback) {
+        console.log("currentDelivery", workflow.getCurrentDelivery());
         ajax.postJSON({
-            action:"courier/delivery_offers/" + workflow.getCurrentDelivery().id + "/response",
-            params: {response: response},
+            action:"couriers/" + courier.getID() + "/delivery_offers/" + workflow.getCurrentDelivery().id + "/answer",
+            params: {answer: response},
             callback: function(data) {
                 callback(data);
             }
@@ -531,63 +533,56 @@ TIRAMIZOO.workflow.acceptedState = function (app, $) {
         }
     }
 
-    function arrivedAtPickUp() {
-        workflow.setRemoteDeliveryState("arrived_at_pickup", function(dropOffData) {
-            workflow.setState("arrived_at_pickup", dropOffData);
+    function pickedUp() {
+        workflow.setRemoteDeliveryState("picked_up", function(dropOffData) {
+            workflow.setState("pickedUp", dropOffData);
         });
     }
 
     return {
         init: init,
-        arrivedAtPickUp: arrivedAtPickUp
+        pickedUp: pickedUp
     }
 };
 
-TIRAMIZOO.namespace("workflow.arrivedAtPickUpState");
-TIRAMIZOO.workflow.arrivedAtPickUpState = function (app, $) {
+TIRAMIZOO.namespace("workflow.pickedUpState");
+TIRAMIZOO.workflow.pickedUpState = function (app, $) {
     var events = app.events,
     notifications = app.notifications,
     workflow = app.workflow;
 
     function init(dropOffData) {
         notifications.showDropOff(dropOffData);
-        events.dispatch("arrivedAtPickUp", dropOffData);
+        events.dispatch("pickedUp", dropOffData);
     }
 
-    function arrivedAtDropOff() {
-        workflow.setRemoteDeliveryState("arrived_at_dropoff", function(billingData) {
-            workflow.setState("arrived_at_dropoff", billingData);
+    function delivered() {
+        workflow.setRemoteDeliveryState("delivered", function(billingData) {
+            workflow.setState("delivered", billingData);
         });
     }
 
     return {
         init: init,
-        arrivedAtDropOff: arrivedAtDropOff
+        delivered: delivered
     }
 };
 
-TIRAMIZOO.namespace("workflow.arrivedAtDropOffState");
-TIRAMIZOO.workflow.arrivedAtDropOffState = function (app, $) {
+TIRAMIZOO.namespace("workflow.deliveredState");
+TIRAMIZOO.workflow.deliveredState = function (app, $) {
     var events = app.events,
     notifications = app.notifications,
     workflow = app.workflow;
 
     function init(billingData) {
-        //notifications.showBilling(billingData);
-        //events.dispatch("arrivedAtDropOff", billingData);
-        bill();
-    }
-
-    function bill() {
+        $.mobile.changePage("/billings/edit");
         workflow.setCurrentDelivery(null);
         notifications.hideAll();
         events.dispatch("billing");
-        $.mobile.changePage("/billings/edit");
     }
 
     return {
-        init: init,
-        bill: bill
+        init: init
     }
 };
 
@@ -601,8 +596,8 @@ TIRAMIZOO.workflow = (function (app, $) {
     stateMapping = {
         new_delivery: "newDeliveryState",
         accepted: "acceptedState",
-        arrived_at_pickup: "arrivedAtPickUpState",
-        arrived_at_dropoff: "arrivedAtDropOffState",
+        pickedUp: "pickedUpState",
+        delivered: "deliveredState",
         billed: "defaultState",
         cancelled: "defaultState"
     },
@@ -633,12 +628,12 @@ TIRAMIZOO.workflow = (function (app, $) {
         currentState.declineDelivery();
     }
 
-    function arrivedAtPickUp() {
-        currentState.arrivedAtPickUp();
+    function pickedUp() {
+        currentState.pickedUp();
     }
 
-    function arrivedAtDropOff() {
-        currentState.arrivedAtDropOff();
+    function delivered() {
+        currentState.delivered();
     }
 
     function bill() {
@@ -655,7 +650,7 @@ TIRAMIZOO.workflow = (function (app, $) {
 
     function setRemoteDeliveryState(state, callback) {
         ajax.postJSON({
-            action:"courier/deliveries/" + currentDelivery.id + "/state",
+            action:"couriers/" + courier.getID() + "/deliveries/" + currentDelivery.id + "/state",
             params: {state: state, position: courier.getPosition()},
             callback: function(data) {
                 callback(data);
@@ -680,8 +675,8 @@ TIRAMIZOO.workflow = (function (app, $) {
         setDefaultState: setDefaultState,
         acceptDelivery: acceptDelivery,
         declineDelivery: declineDelivery,
-        arrivedAtPickUp: arrivedAtPickUp,
-        arrivedAtDropOff: arrivedAtDropOff,
+        pickedUp: pickedUp,
+        delivered: delivered,
         bill: bill,
         cancel: cancel
     }

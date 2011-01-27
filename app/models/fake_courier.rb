@@ -10,7 +10,8 @@ class FakeCourier
     {
       id: "1",
       work_state: "not_available",
-      travel_mode: "biking"
+      travel_mode: "biking",
+      current_delivery: arrived_at_dropoff
     }
   end
 
@@ -135,8 +136,8 @@ class FakeCourier
     end
   end
 
-  def set_delivery_offer_response(params)
-    case params[:response]
+  def set_delivery_offer_answer(params)
+    case params[:answer]
       when "accepted"
         get_result delivery_accepted
       when "declined"

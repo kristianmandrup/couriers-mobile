@@ -4,7 +4,7 @@ class ApplicationController < ActionController::Base
   before_filter :authenticate
 
   def authenticate
-    @current_courier = FakeCourier.new
+    @current_courier = Courier.new
     @current_courier.authenticate
   end
 
