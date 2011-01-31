@@ -152,6 +152,54 @@ TIRAMIZOO.pubsub = (function (app, pubSubService) {
 }(TIRAMIZOO, PUBNUB));
 
 /**
+ * Notifications
+ */
+TIRAMIZOO.namespace("notifications");
+TIRAMIZOO.notifications = (function (app, $) {
+    $.jGrowl.defaults.position = "center";
+    $.jGrowl.defaults.closer = false;
+
+    function show(options) {
+        hide();
+
+        var growlOptions = {
+            header: options.title,
+            closeTemplate: "",
+            sticky: options.sticky
+        };
+        if (!options.sticky) {
+            growlOptions.life = 10000;
+        }
+        growlOptions.afterOpen = options.afterOpen;
+        $.jGrowl(options.message, growlOptions);
+    }
+
+    function hide() {
+        $("div.jGrowl").jGrowl("close");
+    }
+
+    function hideAll() {
+        hide();
+    }
+
+    function status(newStatus) {
+        show({
+            title: "Info",
+            message: newStatus.message,
+            sticky: false
+        });
+    }
+
+    return {
+        show: show,
+        status: status,
+        hide: hide,
+        hideAll: hideAll
+    };
+
+}(TIRAMIZOO, $));
+
+/**
  * Courier
  */
 TIRAMIZOO.namespace("courier");
@@ -211,11 +259,11 @@ TIRAMIZOO.courier = (function (app, $) {
     }
 
     function setPosition(position) {
+        currentPosition = position;
         ajax.postJSON({
             action:"couriers/" + id + "/location",
             params: {position:{latitude: position.latitude, longitude: position.longitude}},
             callback: function(data) {
-                currentPosition = position;
             },
             loader: false
         });
@@ -255,431 +303,78 @@ TIRAMIZOO.courier = (function (app, $) {
 }(TIRAMIZOO, $));
 
 /**
- * Notifications
+ * Functions for Geolocation API
  */
-TIRAMIZOO.namespace("notifications");
-TIRAMIZOO.notifications = (function (app, $) {
-    var SECONDS_TO_ACCEPT = 20,
-    progressIntervalID,
-    progressBar,
-    progressBarMessage,
-    progressStartTime,
-    events = app.events;
-
-    $.jGrowl.defaults.position = "center";
-    $.jGrowl.defaults.closer = false;
-
-    function showGrowl(options) {
-        hideGrowl();
-
-        var growlOptions = {
-            header: options.title,
-            closeTemplate: "",
-            sticky: options.sticky
-        };
-        if (!options.sticky) {
-            growlOptions.life = 10000;
-        }
-        growlOptions.afterOpen = options.afterOpen;
-        $.jGrowl(options.message, growlOptions);
-    }
-
-    function hideGrowl() {
-        $("div.jGrowl").jGrowl("close");
-    }
-
-    function hideAll() {
-        hideAcceptanceTimeout();
-        hideGrowl();
-    }
-
-    function showNewDelivery(deliveryData) {
-        var title = "New Delivery",
-        message = "From "
-                + deliveryData.pickup.address.street
-                + " to " + deliveryData.dropoff.address.street
-                + " (" + deliveryData.pickup.notes + ")";
-
-        showGrowl({
-            title: title,
-            message: message,
-            sticky: true
-        });
-        showAcceptanceTimeout();
-    }
-
-    function hideNewDelivery() {
-        hideAcceptanceTimeout();
-        hideGrowl();
-    }
-
-    function showAcceptanceTimeout() {
-        showGrowl({
-            title: "",
-            message: "",
-            sticky: true,
-            afterOpen: showAcceptanceProgress
-        });
-    }
-
-    function showAcceptanceProgress() {
-        var growlDiv = $(".jGrowl-notification:last-child"),
-        progressContainer;
-
-        growlDiv.addClass("jGrowl-progress");
-        growlDiv.append('<div class="progress-bar"><div/><span/></div>');
-        progressContainer = growlDiv.find(".progress-bar");
-        progressBar = progressContainer.find("div");
-        progressBarMessage = progressContainer.find("span");
-        progressStartTime = new Date().getTime();
-        progressIntervalID = setInterval(updateAcceptanceTimeout, 1000);
-    }
-
-    function updateAcceptanceTimeout() {
-        var timePassed = new Date().getTime() - progressStartTime,
-        percentPassed = timePassed / (SECONDS_TO_ACCEPT * 1000) * 100,
-        timeLeft = SECONDS_TO_ACCEPT - Math.round(timePassed / 1000);
-        progressBar.css("width", percentPassed + "%");
-        progressBarMessage.text(timeLeft + " sec. left to accept delivery...");
-        if (timeLeft <= 0) {
-            hideNewDelivery();
-            events.dispatch("deliveryNotAccepted");
-        }
-    }
-
-    function hideAcceptanceTimeout() {
-        if (progressIntervalID) {
-            clearInterval(progressIntervalID);
-            progressIntervalID = null;
-            $(".progress-bar").remove();
-        }
-    }
-
-    function showPickUp(pickUpData) {
-        var title = "Go To Pickup",
-        contact = pickUpData.pickup.contact,
-        message = pickUpData.pickup.address.street
-                + ", " + contact.name + ", "
-                + contact.company_name + ", "
-                + contact.phone + " "
-                + " (" + pickUpData.pickup.notes + ")";
-
-        showGrowl({
-            title: title,
-            message: message,
-            sticky: true
-        });
-    }
-
-    function showDropOff(dropOffData) {
-        var title = "Go To Dropoff",
-        contact = dropOffData.dropoff.contact,
-        message = dropOffData.dropoff.address.street
-                + ", " + contact.name + ", "
-                + contact.company_name + ", "
-                + contact.phone + " "
-                + " (" + dropOffData.dropoff.notes + ")";
-
-        showGrowl({
-            title: title,
-            message: message,
-            sticky: true
-        });
-    }
-
-    function showBilling(billingData) {
-        var title = "Go To Billing",
-        contact = billingData.dropoff.contact,
-        message = contact.name + ", "
-                + contact.company_name + ", "
-                + contact.phone + " "
-                + " (" + billingData.dropoff.notes + ")";
-
-        showGrowl({
-            title: title,
-            message: message,
-            sticky: true
-        });
-    }
-
-    function showStatus(newStatus) {
-        showGrowl({
-            title: "Info",
-            message: newStatus.message,
-            sticky: false
-        });
-    }
-
-    return {
-        showNewDelivery: showNewDelivery,
-        hideAcceptanceTimeout: hideAcceptanceTimeout,
-        showPickUp: showPickUp,
-        showDropOff: showDropOff,
-        showBilling: showBilling,
-        showStatus: showStatus,
-        hideAll: hideAll
-    };
-
-}(TIRAMIZOO, $));
-
-/**
- * Workflow States
- */
-TIRAMIZOO.namespace("workflow.state");
-TIRAMIZOO.workflow.state = function (app, $) {
-    var workflow = app.workflow;
-
-    function init(data) { }
-    function acceptDelivery() { }
-    function declineDelivery() { }
-    function pickedUp() { }
-    function delivered() { }
-    function bill() { }
-
-    function cancel() {
-        workflow.setRemoteDeliveryState("cancelled", function() {
-            workflow.setDefaultState();
-        });
-    }
-
-    return {
-        init: init,
-        acceptDelivery: acceptDelivery,
-        declineDelivery: declineDelivery,
-        pickedUp: pickedUp,
-        delivered: delivered,
-        bill: bill,
-        cancel: cancel
-    }
-};
-
-TIRAMIZOO.namespace("workflow.defaultState");
-TIRAMIZOO.workflow.defaultState = function (app, $) {
-    var events = app.events,
-    notifications = app.notifications;
-
-    function init(data) {
-        notifications.hideAll();
-        events.dispatch("defaultState");
-    }
-
-    return {
-        init: init
-    }
-};
-
-TIRAMIZOO.namespace("workflow.newDeliveryState");
-TIRAMIZOO.workflow.newDeliveryState = function (app, $) {
-    var ajax = app.ajax,
-    courier = app.courier,
+TIRAMIZOO.namespace("geolocation");
+TIRAMIZOO.geolocation = (function (app, $) {
+    var courier = app.courier,
     events = app.events,
-    notifications = app.notifications,
-    workflow = app.workflow;
+    geolocation,
+    geolocationOptions = {
+        enableHighAccuracy: false,
+        maximumAge: 30000,
+        timeout: 30000},
+    geolocationID;
 
-    function init(deliveryData) {
-        workflow.setCurrentDelivery(deliveryData);
-        if (!$.mobile.activePage.hasClass("page-index")) {
-            window.location.href = "#";
-        }
-        notifications.showNewDelivery(deliveryData);
-        events.dispatch("newDelivery", deliveryData);
-    }
-
-    function acceptDelivery() {
-        notifications.hideAcceptanceTimeout();
-        setRemoteDeliveryOffer("accepted", function (pickUpData) {
-            workflow.setState("accepted", pickUpData);
-        });
-    }
-
-    function declineDelivery() {
-        setRemoteDeliveryOffer("declined", function(data) {
-            workflow.setDefaultState();
-        });
-    }
-
-    function setRemoteDeliveryOffer(response, callback) {
-        console.log("currentDelivery", workflow.getCurrentDelivery());
-        ajax.postJSON({
-            action:"couriers/" + courier.getID() + "/delivery_offers/" + workflow.getCurrentDelivery().id + "/answer",
-            params: {answer: response},
-            callback: function(data) {
-                callback(data);
+    function init() {
+        geolocation = navigator.geolocation;
+        app.log(geolocation ? "hasGeolocation" : "noGeolocation");
+        if (geolocation) {
+            if (geolocationID) {
+                geolocation.clearWatch(geolocationID);
             }
-        });
-    }
-
-    return {
-        init: init,
-        acceptDelivery: acceptDelivery,
-        declineDelivery: declineDelivery
-    }
-};
-
-TIRAMIZOO.namespace("workflow.acceptedState");
-TIRAMIZOO.workflow.acceptedState = function (app, $) {
-    var codes = app.codes,
-    events = app.events,
-    notifications = app.notifications,
-    workflow = app.workflow;
-
-    function init(pickUpData) {
-        if (pickUpData.status.code == codes.OK) {
-            notifications.showPickUp(pickUpData);
-            events.dispatch("deliveryAccepted", pickUpData);
+            getCurrentPosition();
+            geolocationID = geolocation.watchPosition(geolocationChanged, geolocationError, geolocationOptions);
         } else {
-            notifications.showStatus(pickUpData.status);
-            events.dispatch("deliveryNotAccepted", pickUpData);
+            geolocationError({code:"general"});
         }
     }
 
-    function pickedUp() {
-        workflow.setRemoteDeliveryState("picked_up", function(dropOffData) {
-            workflow.setState("pickedUp", dropOffData);
-        });
+    function getCurrentPosition() {
+        geolocation.getCurrentPosition(geolocationSuccess, geolocationError, geolocationOptions);
     }
 
-    return {
-        init: init,
-        pickedUp: pickedUp
-    }
-};
-
-TIRAMIZOO.namespace("workflow.pickedUpState");
-TIRAMIZOO.workflow.pickedUpState = function (app, $) {
-    var events = app.events,
-    notifications = app.notifications,
-    workflow = app.workflow;
-
-    function init(dropOffData) {
-        notifications.showDropOff(dropOffData);
-        events.dispatch("pickedUp", dropOffData);
+    function geolocationSuccess(geoPosition) {
+        app.log("geolocationSuccess");
+        updateGeoPosition(geoPosition);
     }
 
-    function delivered() {
-        workflow.setRemoteDeliveryState("delivered", function(billingData) {
-            workflow.setState("delivered", billingData);
-        });
+    function geolocationChanged(geoPosition) {
+        app.log("geolocationChanged");
+        updateGeoPosition(geoPosition);
     }
 
-    return {
-        init: init,
-        delivered: delivered
+    function geolocationError(error) {
+        switch (error.code) {
+            case error.PERMISSION_DENIED:
+                app.log("geolocationError: PERMISSION_DENIED");
+                break;
+            case error.POSITION_UNAVAILABLE:
+                app.log("geolocationError: POSITION_UNAVAILABLE");
+                getCurrentPosition();
+                break;
+            case error.TIMEOUT:
+                app.log("geolocationError: TIMEOUT");
+                getCurrentPosition();
+                break;
+            default:
+                app.log("geolocationError: OTHER");
+                break;
+        }
     }
-};
 
-TIRAMIZOO.namespace("workflow.deliveredState");
-TIRAMIZOO.workflow.deliveredState = function (app, $) {
-    var events = app.events,
-    notifications = app.notifications,
-    workflow = app.workflow;
-
-    function init(billingData) {
-        $.mobile.changePage("/billings/edit");
-        workflow.setCurrentDelivery(null);
-        notifications.hideAll();
-        events.dispatch("billing");
+    function updateGeoPosition(geoPosition) {
+        var position = {
+            latitude: geoPosition.coords.latitude,
+            longitude: geoPosition.coords.longitude};
+        courier.setPosition(position);
+        events.dispatch("geolocationUpdated", position);
     }
 
     return {
         init: init
     }
-};
 
-/**
- * Delivery workflow (state machine)
- */
-TIRAMIZOO.namespace("workflow");
-TIRAMIZOO.workflow = (function (app, $) {
-    var ajax = app.ajax,
-    courier = app.courier,
-    stateMapping = {
-        new_delivery: "newDeliveryState",
-        accepted: "acceptedState",
-        pickedUp: "pickedUpState",
-        delivered: "deliveredState",
-        billed: "defaultState",
-        cancelled: "defaultState"
-    },
-    workflow = app.workflow,
-    currentDelivery,
-    currentState;
-
-    function init(info) {
-        currentDelivery = info.currentDelivery;
-        if (currentDelivery) {
-            setState(currentDelivery.state, currentDeslivery);
-        }
-    }
-
-    function setState(state, data) {
-        var stateClassName = stateMapping[state] || "defaultState";
-        currentState = $.extend(
-                workflow.state(app, $),
-                workflow[stateClassName](app, $));
-        currentState.init(data);
-    }
-
-    function acceptDelivery() {
-        currentState.acceptDelivery();
-    }
-
-    function declineDelivery() {
-        currentState.declineDelivery();
-    }
-
-    function pickedUp() {
-        currentState.pickedUp();
-    }
-
-    function delivered() {
-        currentState.delivered();
-    }
-
-    function bill() {
-        currentState.bill();
-    }
-
-    function cancel() {
-        currentState.cancel();
-    }
-
-    function setDefaultState() {
-        setState("default");
-    }
-
-    function setRemoteDeliveryState(state, callback) {
-        ajax.postJSON({
-            action:"couriers/" + courier.getID() + "/deliveries/" + currentDelivery.id + "/state",
-            params: {state: state, position: courier.getPosition()},
-            callback: function(data) {
-                callback(data);
-            }
-        });
-    }
-
-    function getCurrentDelivery() {
-        return currentDelivery;
-    }
-
-    function setCurrentDelivery(newCurrentDelivery) {
-        currentDelivery = newCurrentDelivery;
-    }
-
-    return {
-        init: init,
-        getCurrentDelivery: getCurrentDelivery,
-        setCurrentDelivery: setCurrentDelivery,
-        setRemoteDeliveryState: setRemoteDeliveryState,
-        setState: setState,
-        setDefaultState: setDefaultState,
-        acceptDelivery: acceptDelivery,
-        declineDelivery: declineDelivery,
-        pickedUp: pickedUp,
-        delivered: delivered,
-        bill: bill,
-        cancel: cancel
-    }
 }(TIRAMIZOO, jQuery));
 
 /**
@@ -687,37 +382,43 @@ TIRAMIZOO.workflow = (function (app, $) {
  */
 TIRAMIZOO.main = (function (app, $) {
     var courier = app.courier,
-    pubsub = app.pubsub,
-    workflow = app.workflow,
-    test = tiramizooTest(app, $);
+    events = app.events,
+    geolocation = app.geolocation,
+    pubsub = app.pubsub;
 
     $(document).bind("mobileinit", mobileInit);
 
-    $("html").delegate("a", "click", function(ev) {
-        $("div.ui-loader").css("top", "100px");
-    });
-
     function mobileInit() {
-        //$.mobile.ajaxLinksEnabled = false;
-        //$.mobile.ajaxFormsEnabled = false;
+        // temporary hack until jquery team fixes page min-height css
+        $('div[data-role="page"]').live("pagecreate", function(event, ui) {
+            $(this).attr("style", "");
+        });
     }
 
     function init(options) {
+        var courierInfo = options.courierInfo;
         courier.init({
-                id: options.courierInfo.id,
-                travelMode: options.courierInfo.travel_mode});
-        workflow.init({currentDelivery: options.courierInfo.currentDelivery});
-        pubsub.subscribe({channel:"delivery-" + courier.getID(), action:"delivery_offer", callback:onNewDelivery});
-        setTimeout(test.newDelivery, 10000);
+                id: courierInfo.id,
+                travelMode: courierInfo.travel_mode});
+        pubsub.subscribe({channel:"delivery-" + courier.getID(), action:"delivery_offer", callback:onDeliveryOffer});
+        geolocation.init();
+        setTimeout(tiramizooTest(app, $).deliveryOffer, 10000);
     }
 
-    function onNewDelivery(newDelivery) {
-        console.log(newDelivery);
-        workflow.setState("new_delivery", newDelivery);
+    function onDeliveryOffer(deliveryOffer) {
+        if (!$.mobile.activePage.hasClass("page-index")) {
+            window.location.href = "#";
+        }
+        events.dispatch("deliveryOffer", deliveryOffer);
+    }
+
+    function gotoPage(page) {
+        $.mobile.changePage(page);
     }
 
     return {
-        init: init
+        init: init,
+        gotoPage: gotoPage
     }
 
 }(TIRAMIZOO, jQuery));

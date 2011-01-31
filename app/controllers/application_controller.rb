@@ -4,7 +4,7 @@ class ApplicationController < ActionController::Base
   before_filter :authenticate
 
   def authenticate
-    @current_courier = Courier.new
+    @current_courier = FakeCourier.new
     @current_courier.authenticate
   end
 
@@ -13,6 +13,10 @@ class ApplicationController < ActionController::Base
   def mobile_redirect_to(path)
     @mobile_redirect_path = path
     render "application/redirect"
+  end
+
+  def request_json
+    HashWithIndifferentAccess.new(JSON.parse(request.body.read))
   end
 
 end

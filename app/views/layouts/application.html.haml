@@ -19,4 +19,6 @@
       = yield :meta
       = csrf_meta_tag
     %body
+      :javascript
+        TIRAMIZOO.main.init({courierInfo: JSON.parse('#{courier_info_json}')});
       = yield

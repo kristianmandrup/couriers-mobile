@@ -1,7 +1,7 @@
 class BillingsController < ApplicationController
 
   def edit
-    @current_delivery = HashWithMethodAccess.new(@current_courier.get_info[:current_delivery])
+    #@current_delivery = @current_courier.get_info[:current_delivery]
   end
 
   def update

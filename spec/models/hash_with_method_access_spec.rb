@@ -1,19 +1,28 @@
 require "spec_helper"
 
 describe HashWithMethodAccess do
-  context "hash with foo and bar" do
+  
+  context "hash with some values" do
     before do
-      @a_hash = {:foo => "foo", :bar => "bar"}
+      a_hash = {
+          foo: "foo",
+          bar: {
+              can: "can",
+              haz: "haz"
+          }}
+      @method_hash = a_hash.extend(HashWithMethodAccess)
     end
 
-    it "should access hash value using foo method" do
-      method_hash = HashWithMethodAccess.new(@a_hash)
-      method_hash.foo.should == "foo"
+    it "should be accessible with method syntax" do
+      @method_hash.foo.should == "foo"
     end
 
-    it "should not access hash value using blip method" do
-      method_hash = HashWithMethodAccess.new(@a_hash)
-      lambda {method_hash.blip}.should raise_error
+    it "should be accessible with method syntax for nested properties" do
+      @method_hash.bar.haz.should == "haz"
+    end
+
+    it "should raise error when accessing non-existing properties" do
+      lambda { @method_hash.non_existent }.should raise_error
     end
   end
 

@@ -1,11 +1,15 @@
-class HashWithMethodAccess
-	def initialize(hash)		
-		self.class.class_eval do 		
-			hash.each_pair do |key, value|
-				define_method(key) do 
-					value
-				end
-			end
-		end
-	end	
+module HashWithMethodAccess
+
+  def method_missing(id, *args, &block)
+    value = self[id]
+    case value
+      when nil
+        raise NoMethodError
+      when Hash
+        value = self[id].extend(HashWithMethodAccess)
+      else
+        value
+    end
+  end
+
 end

@@ -8,7 +8,11 @@ html, body, .page-content, .page-index, #map-canvas {
 .page-index .page-footer {
     position: absolute;
     bottom: 0;
-    z-index: 9997;
+    z-index: 9998;
+}
+
+.strong {
+    font-weight: bold;
 }
 
 /* jQuery Mobile Additions / Overrides */
@@ -59,15 +63,6 @@ html, body, .page-content, .page-index, #map-canvas {
 
 .main-nav-btn-active {
     background: 			#4596ce;
-}
-
-.ui-loader {
-    z-index: 9998;
-    top: 0;
-}
-
-.strong {
-    font-weight: bold;
 }
 
 .align-right {

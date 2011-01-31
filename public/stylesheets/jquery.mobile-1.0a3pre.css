@@ -267,7 +267,7 @@
 	color: 					#3E3E3E;
 	font-weight: bold;
 	text-shadow: 0 1px 1px 	#fff;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#f0f0f0,
 							#e9eaeb);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -287,7 +287,7 @@
 	color: 					#333333;
 	text-shadow: 0 1px 0 	#fff;
 	background: 			#f0f0f0;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#eeeeee, 
 							#dddddd);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -318,7 +318,7 @@
 	cursor: pointer;
 	text-shadow: 0 1px 1px #f6f6f6;
 	text-decoration: none;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#fefefe, 
 							#eeeeee);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -337,7 +337,7 @@
 	color: 					#101010;
 	text-decoration: none;
 	text-shadow: 0 1px 1px 	#fff;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#ededed, 
 							#dadada);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -354,7 +354,7 @@
 	font-weight: bold;
 	color: 					#111111;
 	text-shadow: 0 1px 1px 	#ffffff;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#eeeeee, 
 							#fdfdfd);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -380,7 +380,7 @@
 	background: 			#bbb;
 	color: 					#333;
 	text-shadow: 0 1px 0 #eee;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#ddd, 
 							#bbb);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -441,7 +441,7 @@
 	cursor: pointer;
 	text-shadow: 0 1px 1px 	#fff;
 	text-decoration: none;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#fdfdfd, 
 							#eeeeee);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -458,7 +458,7 @@
 	font-weight: bold;
 	color: 					#111;
 	text-shadow: 0 1px 1px 	#ffffff;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#eeeeee, 
 							#ffffff);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -472,7 +472,7 @@
 	font-weight: bold;
 	color: 					#111;
 	text-shadow: none;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#cccccc, 
 							#eeeeee);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -495,7 +495,7 @@
 	background: 			#fadb4e;
 	color: 					#333;
 	text-shadow: 0 1px 0 	#fff;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#fceda7, 
 							#fadb4e);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -522,7 +522,7 @@
 	color: 					#333333;
 	text-shadow: 0 1px 0 	#fff;
 	background: 			#faeb9e;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#fff, 
 							#faeb9e);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -553,7 +553,7 @@
 	text-shadow: 0 1px 1px 	#fe3;
 	text-decoration: none;
 	text-shadow: 0 1px 0 	#fff;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#fceda7, 
 							#fadb4e);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -571,7 +571,7 @@
 	color: 					#111;
 	text-decoration: none;
 	text-shadow: 0 1px 1px 	#fff;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#fcf0b5, 
 							#fbe26f);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -589,7 +589,7 @@
 	font-weight: bold;
 	color: 					#111;
 	text-shadow: 0 1px 1px 	#ffffff;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#fadb4e, 
 							#fceda7);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -626,7 +626,7 @@ a.ui-link-inherit {
 	cursor: pointer;
 	text-shadow: 0 -1px 1px #145072;
 	text-decoration: none;
-	background-image: -moz-linear-gradient(, 
+	background-image: -moz-linear-gradient(top, 
 							#85bae4, 
 							#5393c5);
 	background-image: -webkit-gradient(linear,left top,left bottom,
@@ -1228,7 +1228,8 @@ Built by David Kaneda and maintained by Jonathan Stark.
 .ui-mobile-viewport-transitioning,
 .ui-mobile-viewport-transitioning .ui-page {
 	width: 100%;
-	height: 100%;
+	height: 120%; /* we want to make sure we take up enough to keep the scroll top hidden during transition, but not too much to overflow our buffer */
+	overflow: hidden;
 }
 
 .flip {
@@ -1399,6 +1400,7 @@ Built by David Kaneda and maintained by Jonathan Stark.
 * Dual licensed under the MIT (MIT-LICENSE.txt) or GPL (GPL-LICENSE.txt) licenses.
 */
 .ui-btn { display: block; text-align: center; cursor:pointer;  position: relative; margin: .5em 5px; padding: 0; }
+.ui-btn:focus, .ui-btn:active { outline: none; }
 .ui-header .ui-btn, .ui-footer .ui-btn, .ui-bar .ui-btn { display: inline-block; font-size: 13px; margin: 0; }
 .ui-btn-inline { display: inline-block; }
 .ui-btn-inner { padding: .6em 25px; display: block; height: 100%; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; position: relative; }
@@ -1522,8 +1524,10 @@ Built by David Kaneda and maintained by Jonathan Stark.
 * Copyright (c) jQuery Project
 * Dual licensed under the MIT (MIT-LICENSE.txt) or GPL (GPL-LICENSE.txt) licenses.
 */
-.ui-select { display: block; }
+.ui-select { display: block; position: relative; }
 .ui-select select { position: absolute; left: -9999px; top: -9999px; }
+.ui-select a select { cursor: pointer; -webkit-appearance: button; left: 0; top:0; width: 100%; height: 100%; opacity: 0; }
+
 .ui-select .ui-btn-icon-right .ui-btn-inner { padding-right: 45px; } 
 .ui-select .ui-btn-icon-right .ui-icon { right: 15px;  }
 

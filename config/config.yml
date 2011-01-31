@@ -1,8 +1,8 @@
 development:
-  tiramizoo_api_url: http://tiramizoo-beta.heroku.com/api/
+  tiramizoo_api_url: http://tiramizoo-beta.heroku.com/api
 
 test:
-  tiramizoo_api_url: http://tiramizoo-beta.heroku.com/api/
+  tiramizoo_api_url: http://tiramizoo-beta.heroku.com/api
 
 production:
-  tiramizoo_api_url: http://tiramizoo-beta.heroku.com/api/
+  tiramizoo_api_url: http://tiramizoo-beta.heroku.com/api

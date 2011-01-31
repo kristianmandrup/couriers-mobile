@@ -11,7 +11,6 @@ class FakeCourier
       id: "1",
       work_state: "not_available",
       travel_mode: "biking",
-      current_delivery: arrived_at_dropoff
     }
   end
 
@@ -88,15 +87,13 @@ class FakeCourier
     {
       id: "1",
       state: "accepted",
-      pickup: {
-        location: {
-          position: {
-            latitude: 48.13307,
-            longitude: 11.57463
-          },
-          address: {
-            street: "Muellerstr. 42"
-          }
+      pop: {
+        position: {
+          latitude: 48.13307,
+          longitude: 11.57463
+        },
+        address: {
+          street: "Muellerstr. 42"
         },
         contact: 	{
           company_name: "tiramizoo",
@@ -105,15 +102,13 @@ class FakeCourier
         },
         notes: "Big box"
       },
-      dropoff: {
-        location: {
-          position: {
-            latitude: 48.1498756,
-            longitude: 11.5758714
-          },
-          address: {
-            street: "Tuerkenstr. 60"
-          }
+      pod: {
+        position: {
+          latitude: 48.1498756,
+          longitude: 11.5758714
+        },
+        address: {
+          street: "Tuerkenstr. 60"
         },
         contact: {
           company_name: "tiramizoo",
@@ -126,21 +121,21 @@ class FakeCourier
   end
 
   def set_delivery_state(params)
-    case params[:state]
-      when "arrived_at_pickup"
-        get_result arrived_at_pickup
-      when "arrived_at_dropoff"
-        get_result arrived_at_dropoff
+    case params[:state].to_sym
+      when :picked_up
+        get_result picked_up
+      when :delivered
+        get_result delivered
       else
         get_result
     end
   end
 
   def set_delivery_offer_answer(params)
-    case params[:answer]
-      when "accepted"
-        get_result delivery_accepted
-      when "declined"
+    case params[:answer].to_sym
+      when :accepted
+        get_result accepted
+      when :declined
         get_result
       else
         get_result
@@ -155,15 +150,15 @@ class FakeCourier
     result
   end
 
-  def delivery_accepted
+  def accepted
     get_delivery_info(1)
   end
 
-  def arrived_at_pickup
+  def picked_up
     get_delivery_info(1)
   end
 
-  def arrived_at_dropoff
+  def delivered
     get_delivery_info(1)
   end
 

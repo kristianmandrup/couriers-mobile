@@ -14,8 +14,6 @@ return {
     }
 }
 --------------------------------------------------------------------------------
-Courier:
---------------------------------------------------------------------------------
 Get current courier info
 
 courier/:id/info :get
@@ -46,14 +44,14 @@ courier/:id/location :put
 }
 --------------------------------------------------------------------------------
 Get details about a specific delivery
-Send back different data depending on the state of the delivery.
-In accepted state pickup.contact and dropoff.contact are not sent back
+pop = point of pickup
+pod = point of delivery
 
 courier/:id/deliveries/1/info :get
 {
     id: "1",
     state: "accepted|cancelled|picked_up|delivered|billed"
-	pickup:		{
+	pop:		{
 
                     position: 	{
                                     latitude: 150.644,
@@ -69,7 +67,7 @@ courier/:id/deliveries/1/info :get
 								},
 					notes: "Big box"
 				},						
-	dropoff:	{
+	pod:	    {
 
                     position: 	{
                                     latitude: 150.644,
@@ -87,14 +85,14 @@ courier/:id/deliveries/1/info :get
 				}
 }
 --------------------------------------------------------------------------------
-Set response for a specific delivery offer:
+Set response for a specific delivery offer
 
-courier/:id/delivery_offers/1/state :put
+courier/:id/delivery_offers/1/answer :put
 {
-	state: "accepted|declined"
+	answer: "accepted|declined"
 }
 --------------------------------------------------------------------------------
-Set the state of a specific delivery:
+Set the state of a specific delivery
 
 courier/:id/deliveries/1/state :put
 {
@@ -106,11 +104,8 @@ courier/:id/deliveries/1/state :put
 }
 
 returns: > courier/deliveries/1/info :get
-
 --------------------------------------------------------------------------------
-Locations:
---------------------------------------------------------------------------------
-Get locations of all couriers within my radius:
+Get locations of all couriers within my radius
 
 location/nearby_couriers :get,
 params: {
@@ -142,14 +137,16 @@ params: {
 ################################################################################
 TIRAMIZOO PUB/SUB (Pubnub.com) API
 ################################################################################
-Push new delivery offer from server to client:
+Push new delivery offer from server to client.
+pop = point of pickup
+pod = point of delivery
 
 channel: delivery-#{courier_id}
 {
     action: "delivery_offer",
     data: {
         id: "1",
-        pickup:		{
+        pop:		{
 
                         position: 	{
                                         latitude: 150.644,
@@ -160,7 +157,7 @@ channel: delivery-#{courier_id}
                                     },
                         notes: "Big box"
                     },
-        dropoff:	{
+        pod:	    {
 
                         position: 	{
                                         latitude: 150.644,

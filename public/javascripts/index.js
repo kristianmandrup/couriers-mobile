@@ -1,83 +1,10 @@
 /**
- * Functions for Geolocation API
- */
-TIRAMIZOO.namespace("geolocation");
-TIRAMIZOO.geolocation = (function (app, $) {
-    var geolocation,
-    geolocationOptions = {
-        enableHighAccuracy: false,
-        maximumAge: 30000,
-        timeout: 30000},
-    geolocationID,
-    updatePositionCallback;
-
-    function init(newUpdatePositionCallback) {
-        updatePositionCallback = newUpdatePositionCallback;
-        start();
-    }
-
-    function start() {
-        geolocation = navigator.geolocation;
-        app.log(geolocation ? "hasGeolocation" : "noGeolocation");
-        if (geolocation) {
-            if (geolocationID) {
-                geolocation.clearWatch(geolocationID);
-            }
-            getCurrentPosition();
-            geolocationID = geolocation.watchPosition(geolocationChanged, geolocationError, geolocationOptions);
-        } else {
-            geolocationError({code:"general"});
-        }
-    }
-
-    function getCurrentPosition() {
-        geolocation.getCurrentPosition(geolocationSuccess, geolocationError, geolocationOptions);
-    }
-
-    function geolocationSuccess(geoPosition) {
-        app.log("geolocationSuccess");
-        updateGeoPosition(geoPosition);
-    }
-
-    function geolocationChanged(geoPosition) {
-        app.log("geolocationChanged");
-        updateGeoPosition(geoPosition);
-    }
-
-    function geolocationError(error) {
-        switch (error.code) {
-            case error.PERMISSION_DENIED:
-                app.log("geolocationError: PERMISSION_DENIED");
-                break;
-            case error.POSITION_UNAVAILABLE:
-                app.log("geolocationError: POSITION_UNAVAILABLE");
-                getCurrentPosition();
-                break;
-            case error.TIMEOUT:
-                app.log("geolocationError: TIMEOUT");
-                getCurrentPosition();
-                break;
-            default:
-                app.log("geolocationError: OTHER");
-                break;
-        }
-    }
-
-    function updateGeoPosition(geoPosition) {
-        updatePositionCallback(geoPosition.coords.latitude, geoPosition.coords.longitude);
-    }
-
-    return {
-        init: init
-    }
-}(TIRAMIZOO, jQuery));
-
-/**
- * Functions for controlling the Google Map
+ * Functions for controlling Google Maps
  */
 TIRAMIZOO.namespace("map");
 TIRAMIZOO.map = (function (app, $) {
     var courier = app.courier,
+    events = app.events,
     geolocation = app.geolocation,
     g = google.maps,
     map,
@@ -86,10 +13,6 @@ TIRAMIZOO.map = (function (app, $) {
         center: new g.LatLng(48.1359717, 11.572207),
         mapTypeId: g.MapTypeId.ROADMAP,
         mapTypeControl: false,
-        mapTypeControlOptions: {
-            style: g.MapTypeControlStyle.HORIZONTAL_BAR,
-            position: g.ControlPosition.LEFT_CENTER
-        },
         navigationControl: true,
         navigationControlOptions: {
             style: g.NavigationControlStyle.ZOOM_PAN,
@@ -103,21 +26,23 @@ TIRAMIZOO.map = (function (app, $) {
     currentLocationMarker,
     nearbyCourierMarkers,
     directionsRenderer,
-    routeFromPosition,
-    routeToPosition;
+    currentRoute;
 
-    $(document).ready(function() {
+    function init() {
         map = new g.Map(document.getElementById("map-canvas"), mapOptions);
         currentLocationMarker = new g.Marker({map: map, position: mapOptions.center, title: "YOU!"});
-        updatePosition(mapOptions.center.lat(), mapOptions.center.lng());
-        geolocation.init(updatePosition);
-    });
+        updatePosition({latitude: mapOptions.center.lat(), longitude: mapOptions.center.lng()});
+        events.add("geolocationUpdated", getlocationUpdated);
+    }
 
-    function updatePosition(latitude, longitude) {
-        var currentLocation = new g.LatLng(latitude, longitude);
+    function getlocationUpdated(event, position) {
+        updatePosition(position);
+    }
+
+    function updatePosition(position) {
+        var currentLocation = new g.LatLng(position.latitude, position.longitude);
         currentLocationMarker.setPosition(currentLocation);
         map.setCenter(currentLocation);
-        courier.setPosition({latitude: latitude, longitude: longitude});
     }
 
     function showMyLocation() {
@@ -180,21 +105,11 @@ TIRAMIZOO.map = (function (app, $) {
         }
     }
 
-    function routeAlreadyCalculate(fromPosition, toPosition) {
-        if (routeFromPosition && routeToPosition) {
-            if (fromPosition.latitude == routeFromPosition.latitude &&
-                fromPosition.longitude == routeFromPosition.longitude &&
-                toPosition.latitude == routeToPosition.latitude &&
-                toPosition.longitude == routeToPosition.longitude) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function showRoute(pickUpPosition, dropOffPosition) {
-        if (routeAlreadyCalculate(pickUpPosition, dropOffPosition)) {
+    function showRoute(route) {
+        if (route.equals(currentRoute)) {
             return;
+        } else {
+            hideRoute();
         }
 
         var travelMode,
@@ -216,9 +131,9 @@ TIRAMIZOO.map = (function (app, $) {
 
         directionsRequest = {
             origin: currentLocationMarker.getPosition(),
-            waypoints: [{location: new g.LatLng(pickUpPosition.latitude, pickUpPosition.longitude)}],
+            waypoints: [{location: new g.LatLng(route.getFrom().latitude, route.getFrom().longitude)}],
             optimizeWaypoints: true,
-            destination: new g.LatLng(dropOffPosition.latitude, dropOffPosition.longitude),
+            destination: new g.LatLng(route.getTo().latitude, route.getTo().longitude),
             travelMode: travelMode,
             unitSystem: g.DirectionsUnitSystem.METRIC
         };
@@ -226,8 +141,7 @@ TIRAMIZOO.map = (function (app, $) {
         directionsService.route(directionsRequest, function(directionsResult, status) {
             if (status == g.DirectionsStatus.OK) {
                 directionsRenderer.setDirections(directionsResult);
-                routeFromPosition = pickUpPosition;
-                routeToPosition = dropOffPosition;
+                currentRoute = route;
             }
         });
     }
@@ -236,9 +150,8 @@ TIRAMIZOO.map = (function (app, $) {
         if (directionsRenderer) {
             directionsRenderer.setMap(null);
             directionsRenderer = null;
+            currentRoute = null;
         }
-        routeFromPosition = null;
-        routeToPosition = null;
     }
 
     function fitToLocations(locations) {
@@ -247,7 +160,7 @@ TIRAMIZOO.map = (function (app, $) {
         }
         var bounds = new g.LatLngBounds();
         for (var i = 0, max = locations.length; i < max; i++) {
-          bounds.extend(locations[i]);
+            bounds.extend(locations[i]);
         }
         map.fitBounds(bounds);
     }
@@ -255,7 +168,9 @@ TIRAMIZOO.map = (function (app, $) {
     function fitToPositions(positions) {
         var locations = [];
         for (var i = 0, max = positions.length; i < max; i++) {
-            locations.push(new g.LatLng(positions[i].latitude, positions[i].longitude));
+            if (positions[i]) {
+                locations.push(new g.LatLng(positions[i].latitude, positions[i].longitude));
+            }
         }
         fitToLocations(locations);
     }
@@ -267,11 +182,474 @@ TIRAMIZOO.map = (function (app, $) {
     }
 
     return  {
+        init: init,
         showMyLocation: showMyLocation,
         toggleNearbyCouriers: toggleNearbyCouriers,
+        hideNearbyCouriers: hideNearbyCouriers,
         showRoute: showRoute,
         fitToPositions: fitToPositions,
         showDefaultState: showDefaultState
+    }
+}(TIRAMIZOO, jQuery));
+
+/**
+ * Object to encapsulate from/to route information
+ */
+TIRAMIZOO.namespace("route");
+TIRAMIZOO.route = function (newFrom, newTo) {
+    var from = newFrom,
+    to = newTo;
+
+    function getFrom() {
+        return from;
+    }
+
+    function getTo() {
+        return to;
+    }
+
+    function equals(route) {
+        if (!route) {
+            return false;
+        }
+        return  route.getFrom().latitude == from.latitude &&
+                route.getFrom().longitude == from.longitude &&
+                route.getTo().latitude == to.latitude &&
+                route.getTo().longitude == to.longitude;
+    }
+
+    return  {
+        equals: equals,
+        getFrom: getFrom,
+        getTo: getTo
+    }
+};
+
+/**
+ * Notifications during delivery workflow
+ */
+TIRAMIZOO.namespace("workflowNotifications");
+TIRAMIZOO.workflowNotifications = (function (app, $) {
+    var SECONDS_TO_ACCEPT = 20,
+    events = app.events,
+    notifications = app.notifications,
+    progressIntervalID,
+    progressBar,
+    progressBarMessage,
+    progressStartTime,
+    timeoutCallback;
+
+    function showDeliveryOffer(deliveryData, newTimeoutCallback) {
+        timeoutCallback = newTimeoutCallback;
+        var title = "New Delivery Offer",
+        message = "From "
+                + deliveryData.pop.address.street
+                + " to " + deliveryData.pod.address.street
+                + " (" + deliveryData.pop.notes + ")";
+
+        notifications.show({
+            title: title,
+            message: message,
+            sticky: true
+        });
+        showAcceptanceTimeout();
+    }
+
+    function showAcceptanceTimeout() {
+        notifications.show({
+            title: "",
+            message: "",
+            sticky: true,
+            afterOpen: showAcceptanceProgress
+        });
+    }
+
+    function showAcceptanceProgress() {
+        var growlDiv = $(".jGrowl-notification:last-child"),
+        progressContainer;
+
+        growlDiv.addClass("jGrowl-progress");
+        growlDiv.append('<div class="progress-bar"><div/><span/></div>');
+        progressContainer = growlDiv.find(".progress-bar");
+        progressBar = progressContainer.find("div");
+        progressBarMessage = progressContainer.find("span");
+        progressStartTime = new Date().getTime();
+        progressIntervalID = setInterval(updateAcceptanceTimeout, 1000);
+    }
+
+    function updateAcceptanceTimeout() {
+        var timePassed = new Date().getTime() - progressStartTime,
+        percentPassed = timePassed / (SECONDS_TO_ACCEPT * 1000) * 100,
+        timeLeft = SECONDS_TO_ACCEPT - Math.round(timePassed / 1000);
+        progressBar.css("width", percentPassed + "%");
+        progressBarMessage.text(timeLeft + " sec. left to accept delivery...");
+        if (timeLeft <= 0) {
+            hideAll();
+            timeoutCallback();
+        }
+    }
+
+    function hideAcceptanceTimeout() {
+        if (progressIntervalID) {
+            clearInterval(progressIntervalID);
+            progressIntervalID = null;
+            $(".progress-bar").remove();
+        }
+    }
+
+    function showPickUp(pickUpData) {
+        var title = "Go To Point of Pickup",
+        contact = pickUpData.pop.contact,
+        message = pickUpData.pop.address.street
+                + ", " + contact.name + ", "
+                + contact.company_name + ", "
+                + contact.phone + " "
+                + " (" + pickUpData.pop.notes + ")";
+
+        notifications.show({
+            title: title,
+            message: message,
+            sticky: true
+        });
+    }
+
+    function showDelivery(deliveryData) {
+        var title = "Go To Point of Delivery",
+        contact = deliveryData.pod.contact,
+        message = deliveryData.pod.address.street
+                + ", " + contact.name + ", "
+                + contact.company_name + ", "
+                + contact.phone + " "
+                + " (" + deliveryData.pod.notes + ")";
+
+        notifications.show({
+            title: title,
+            message: message,
+            sticky: true
+        });
+    }
+
+    function showStatus(newStatus) {
+        notifications.status({
+            title: "Info",
+            message: newStatus.message,
+            sticky: false
+        });
+    }
+
+    function hideAll() {
+        hideAcceptanceTimeout();
+        notifications.hideAll();
+    }
+
+    return {
+        showDeliveryOffer: showDeliveryOffer,
+        hideAcceptanceTimeout: hideAcceptanceTimeout,
+        showPickUp: showPickUp,
+        showDelivery: showDelivery,
+        showStatus: showStatus,
+        hideAll: hideAll
+    };
+
+}(TIRAMIZOO, $));
+
+/**
+ * Workflow Base State
+ */
+TIRAMIZOO.namespace("workflow.state");
+TIRAMIZOO.workflow.state = function (app, $) {
+    var workflow = app.workflow;
+
+    function init(data) { }
+    function acceptDelivery() { }
+    function declineDelivery() { }
+    function pickedUp() { }
+    function delivered() { }
+    function bill() { }
+
+    function cancel() {
+        workflow.setRemoteDeliveryState("cancelled", function() {
+            workflow.setDefaultState();
+        });
+    }
+
+    return {
+        init: init,
+        acceptDelivery: acceptDelivery,
+        declineDelivery: declineDelivery,
+        pickedUp: pickedUp,
+        delivered: delivered,
+        bill: bill,
+        cancel: cancel
+    }
+};
+
+/**
+ * Workflow Default State
+ */
+TIRAMIZOO.namespace("workflow.defaultState");
+TIRAMIZOO.workflow.defaultState = function (app, $) {
+    var map = app.map,
+    navigation = app.navigation,
+    notifications = app.workflowNotifications;
+
+    function init(data) {
+        notifications.hideAll();
+        navigation.showDefaultState();
+        map.showDefaultState();
+    }
+
+    return {
+        init: init
+    }
+};
+
+/**
+ * Workflow Delivery Offer State
+ */
+TIRAMIZOO.namespace("workflow.deliveryOfferState");
+TIRAMIZOO.workflow.deliveryOfferState = function (app, $) {
+    var ajax = app.ajax,
+    courier = app.courier,
+    navigation = app.navigation,
+    notifications = app.workflowNotifications,
+    workflow = app.workflow;
+
+    function init(deliveryOffer) {
+        workflow.setCurrentDelivery(deliveryOffer);
+        notifications.showDeliveryOffer(deliveryOffer, deliveryOfferTimedOut);
+        navigation.showDeliveryOffer();
+        workflow.showDeliveryRoute(deliveryOffer);
+    }
+
+    function deliveryOfferTimedOut() {
+        workflow.setState("default");
+    }
+
+    function acceptDelivery() {
+        notifications.hideAcceptanceTimeout();
+        setRemoteDeliveryOffer("accepted", function (pickUpData) {
+            workflow.setState("accepted", pickUpData);
+        });
+    }
+
+    function declineDelivery() {
+        setRemoteDeliveryOffer("declined", function(data) {
+            workflow.setDefaultState();
+        });
+    }
+
+    function setRemoteDeliveryOffer(response, callback) {
+        console.log("currentDelivery", workflow.getCurrentDelivery());
+        ajax.postJSON({
+            action:"couriers/" +
+                    courier.getID() +
+                    "/delivery_offers/" +
+                    workflow.getCurrentDelivery().id +
+                    "/answer",
+            params: {answer: response},
+            callback: function(data) {
+                callback(data);
+            }
+        });
+    }
+
+    return {
+        init: init,
+        acceptDelivery: acceptDelivery,
+        declineDelivery: declineDelivery
+    }
+};
+
+/**
+ * Workflow Delivery Accepted State
+ */
+TIRAMIZOO.namespace("workflow.acceptedState");
+TIRAMIZOO.workflow.acceptedState = function (app, $) {
+    var codes = app.codes,
+    courier = app.courier,
+    map = app.map,
+    navigation = app.navigation,
+    notifications = app.workflowNotifications,
+    workflow = app.workflow;
+
+    function init(pickUpData) {
+        if (pickUpData.status.code == codes.OK) {
+            notifications.showPickUp(pickUpData);
+            navigation.showDeliveryAccepted();
+            workflow.showDeliveryRoute(pickUpData);
+            map.fitToPositions([courier.getPosition(), pickUpData.pop.position]);
+        } else {
+            notifications.showStatus(pickUpData.status);
+            navigation.showDefaultState();
+            map.showDefaultState();
+        }
+    }
+
+    function pickedUp() {
+        workflow.setRemoteDeliveryState("picked_up", function(dropOffData) {
+            workflow.setState("picked_up", dropOffData);
+        });
+    }
+
+    return {
+        init: init,
+        pickedUp: pickedUp
+    }
+};
+
+/**
+ * Workflow Delivery Picked Up State
+ */
+TIRAMIZOO.namespace("workflow.pickedUpState");
+TIRAMIZOO.workflow.pickedUpState = function (app, $) {
+    var map = app.map,
+    navigation = app.navigation,
+    notifications = app.workflowNotifications,
+    workflow = app.workflow;
+
+    function init(deliveryData) {
+        notifications.showDelivery(deliveryData);
+        navigation.showPickedUp();
+        workflow.showDeliveryRoute(deliveryData);
+        map.fitToPositions([deliveryData.pop.position, deliveryData.pod.position]);
+    }
+
+    function delivered() {
+        workflow.setRemoteDeliveryState("delivered", function(billingData) {
+            workflow.setState("delivered", billingData);
+        });
+    }
+
+    return {
+        init: init,
+        delivered: delivered
+    }
+};
+
+/**
+ * Workflow Delivery Delivered State
+ */
+TIRAMIZOO.namespace("workflow.deliveredState");
+TIRAMIZOO.workflow.deliveredState = function (app, $) {
+    var map = app.map,
+    navigation = app.navigation,
+    notifications = app.workflowNotifications,
+    workflow = app.workflow;
+
+    function init(billingData) {
+        app.main.gotoPage("/billings/edit");
+        workflow.setCurrentDelivery(null);
+        notifications.hideAll();
+        navigation.showDefaultState();
+        map.showDefaultState();
+    }
+
+    return {
+        init: init
+    }
+};
+
+/**
+ * Delivery workflow (state machine)
+ */
+TIRAMIZOO.namespace("workflow");
+TIRAMIZOO.workflow = (function (app, $) {
+    var ajax = app.ajax,
+    courier = app.courier,
+    map = app.map,
+    route = app.route,
+    stateMapping = {
+        delivery_offer: "deliveryOfferState",
+        accepted: "acceptedState",
+        picked_up: "pickedUpState",
+        delivered: "deliveredState",
+        billed: "defaultState",
+        cancelled: "defaultState"
+    },
+    workflow = app.workflow,
+    currentDelivery,
+    currentState;
+
+    function init(info) {
+        currentDelivery = info.currentDelivery;
+        if (currentDelivery) {
+            setState(currentDelivery.state, currentDelivery);
+        }
+    }
+
+    function setState(state, data) {
+        var stateClassName = stateMapping[state] || "defaultState";
+        currentState = $.extend(
+                workflow.state(app, $),
+                workflow[stateClassName](app, $));
+        currentState.init(data);
+    }
+
+    function acceptDelivery() {
+        currentState.acceptDelivery();
+    }
+
+    function declineDelivery() {
+        currentState.declineDelivery();
+    }
+
+    function pickedUp() {
+        currentState.pickedUp();
+    }
+
+    function delivered() {
+        currentState.delivered();
+    }
+
+    function bill() {
+        currentState.bill();
+    }
+
+    function cancel() {
+        currentState.cancel();
+    }
+
+    function setDefaultState() {
+        setState("default");
+    }
+
+    function setRemoteDeliveryState(state, callback) {
+        ajax.postJSON({
+            action:"couriers/" + courier.getID() + "/deliveries/" + currentDelivery.id + "/state",
+            params: {state: state, position: courier.getPosition()},
+            callback: function(data) {
+                callback(data);
+            }
+        });
+    }
+
+    function showDeliveryRoute(delivery) {
+        map.showRoute(route(delivery.pop.position, delivery.pod.position));
+    }
+
+    function getCurrentDelivery() {
+        return currentDelivery;
+    }
+
+    function setCurrentDelivery(newCurrentDelivery) {
+        currentDelivery = newCurrentDelivery;
+    }
+
+    return {
+        init: init,
+        getCurrentDelivery: getCurrentDelivery,
+        setCurrentDelivery: setCurrentDelivery,
+        setRemoteDeliveryState: setRemoteDeliveryState,
+        showDeliveryRoute: showDeliveryRoute,
+        setState: setState,
+        setDefaultState: setDefaultState,
+        acceptDelivery: acceptDelivery,
+        declineDelivery: declineDelivery,
+        pickedUp: pickedUp,
+        delivered: delivered,
+        bill: bill,
+        cancel: cancel
     }
 }(TIRAMIZOO, jQuery));
 
@@ -286,9 +664,9 @@ TIRAMIZOO.navigation = (function (app, $) {
     defaultMenuItems,
     mainNav = $("#main-nav");
 
-    $(document).ready(function() {
+    function init() {
         setupNavigation();
-    });
+    }
 
     function setupNavigation() {
         mainNav.delegate("a", "click", function(ev) {
@@ -348,21 +726,28 @@ TIRAMIZOO.navigation = (function (app, $) {
         });
     }
 
-    function showNewDelivery() {
-        setButton({id:"radar", active: false});
+    function radarOff() {
+        map.hideNearbyCouriers();
+        setButton({id: "radar", active: false});
+    }
+
+    function showDeliveryOffer() {
+        radarOff();
         setMenuItems([
             {id:"accept-delivery", label:"Accept", icon:"accept"},
             {id:"decline-delivery", label:"Decline", icon:"decline"}]);
     }
 
     function showDeliveryAccepted() {
+        radarOff();
         setMenuItems([
-            {id:"picked-up", label:"Delivery picked up", icon:"accept"},
+            {id:"picked-up", label:"Delivery Picked Up", icon:"accept"},
             {id:"service-time", label:"Service Time", icon:"time"},
             {id:"cancel", label:"Cancel", icon:"decline"}]);
     }
 
     function showPickedUp() {
+        radarOff();
         setMenuItems([
             {id:"delivered", label:"Delivered", icon:"accept"},
             {id:"service-time", label:"Service Time", icon:"time"},
@@ -371,7 +756,6 @@ TIRAMIZOO.navigation = (function (app, $) {
 
     function setButton(options) {
         var btn = $("#" + options.id),
-        activeClass = "main-nav-btn-active";
         activeClass = "main-nav-btn-active";
 
         if (options.hasOwnProperty("active") &&
@@ -393,7 +777,7 @@ TIRAMIZOO.navigation = (function (app, $) {
         item,
         clonedItem,
         grid = ["a", "b", "c", "d", "e"];
-        
+
         item = mainNav.find("li:first").clone();
         item.attr("class", "")
                 .find("a:first").attr("id", "")
@@ -426,9 +810,11 @@ TIRAMIZOO.navigation = (function (app, $) {
     }
 
     return  {
+        init: init,
         setDefaultMenuItems: setDefaultMenuItems,
         setWorkState: setWorkState,
-        showNewDelivery: showNewDelivery,
+        radarOff: radarOff,
+        showDeliveryOffer: showDeliveryOffer,
         showDeliveryAccepted: showDeliveryAccepted,
         showPickedUp: showPickedUp,
         showDefaultState: showDefaultState
@@ -440,58 +826,30 @@ TIRAMIZOO.navigation = (function (app, $) {
  */
 TIRAMIZOO.namespace("index");
 TIRAMIZOO.index = (function (app, $) {
-    var courier = app.courier,
+    var codes = app.codes,
     events = app.events,
+    map = app.map,
     navigation = app.navigation,
-    map = app.map;
+    workflow = app.workflow;
 
     function init(options) {
+        events.add("deliveryOffer", onDeliveryOffer);
+        navigation.init();
         navigation.setDefaultMenuItems(options.defaultMenuItems);
         navigation.setWorkState(options.workState);
-
-        events.add("defaultState", onDefaultState);
-        events.add("newDelivery", onNewDelivery);
-        events.add("deliveryAccepted", onDeliveryAccepted);
-        events.add("deliveryNotAccepted", onDeliveryNotAccepted);
-        events.add("pickedUp", pickedUp);
-        events.add("billing", onBilling);
+        map.init();
+        workflow.init({currentDelivery: getCurrentDelivery(options.courierInfo.current_delivery)});
     }
 
-    function onDefaultState(event, data) {
-        navigation.showDefaultState();
-        map.showDefaultState();
+    function getCurrentDelivery(currentDelivery) {
+        if (currentDelivery) {
+            currentDelivery.status = {code: codes.OK};
+        }
+        return currentDelivery;
     }
 
-    function onNewDelivery(event, delivery) {
-        navigation.showNewDelivery();
-        map.showDefaultState();
-        showDeliveryRoute(delivery);
-    }
-
-    function onDeliveryAccepted(event, delivery) {
-        navigation.showDeliveryAccepted();
-        showDeliveryRoute(delivery);
-        map.fitToPositions([courier.getPosition(), delivery.pickup.position]);
-    }
-
-    function onDeliveryNotAccepted(event, delivery) {
-        navigation.showDefaultState();
-        map.showDefaultState();
-    }
-
-    function pickedUp(event, delivery) {
-        navigation.showPickedUp();
-        showDeliveryRoute(delivery);
-        map.fitToPositions([delivery.pickup.position, delivery.dropoff.position]);
-    }
-
-    function onBilling(event, data) {
-        navigation.showDefaultState();
-        map.showDefaultState();
-    }
-
-    function showDeliveryRoute(delivery) {
-        map.showRoute(delivery.pickup.position, delivery.dropoff.position);
+    function onDeliveryOffer(event, deliveryOffer) {
+        workflow.setState("delivery_offer", deliveryOffer);
     }
 
     return {

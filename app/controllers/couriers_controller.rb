@@ -5,11 +5,11 @@ class CouriersController < ApplicationController
   end
 
   def state
-    render :json => @current_courier.set_state(params) if request.post?
+    render :json => @current_courier.set_state(request_json) if request.post?
   end
 
   def location
-    render :json => @current_courier.set_location(params) if request.post?
+    render :json => @current_courier.set_location(request_json) if request.post?
   end
 
   def nearby_couriers
