@@ -2,6 +2,7 @@ module TiramizooApi
   
   module ClassMethods
 
+    # refactor to use https://github.com/dbalatero/typhoeus instead of rest-client
     def call_api(method, path, params = {})
       rest_url = File.join(APP_CONFIG["tiramizoo_api_url"], "#{path}.json")
       case method

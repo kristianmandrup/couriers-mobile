@@ -34,7 +34,7 @@ html, body, .page-content, .page-index, #map-canvas {
 #main-nav .ui-btn .ui-icon { width: 30px!important; height: 30px!important; margin-left: -15px !important; box-shadow: none!important; -moz-box-shadow: none!important; -webkit-box-shadow: none!important; -webkit-border-radius: none !important; border-radius: none !important; }
 .ui-icon-location { background:  url(../images/icon-location.png) 50% 50% no-repeat;  background-size: 20px 21px; }
 .ui-icon-deliveries { background:  url(../images/icon-deliveries.png) 50% 50% no-repeat;  background-size: 24px 25px; }
-.ui-icon-work-state { background:  url(../images/icon-work-state.png) 50% 50% no-repeat;  background-size: 24px 27px; }
+.ui-icon-work-state { background:  url(../images/icon-work-state.png) 50% 50% no-repeat;  background-size: 16px 29px; }
 .ui-icon-radar { background:  url(../images/icon-radar.png) 50% 50% no-repeat;  background-size: 27px 28px; }
 .ui-icon-settings { background:  url(../images/icon-settings.png) 50% 50% no-repeat;  background-size: 24px 27px; }
 .ui-icon-accept { background:  url(../images/icon-accept.png) 50% 50% no-repeat;  background-size: 18px 20px; }
@@ -42,27 +42,23 @@ html, body, .page-content, .page-index, #map-canvas {
 .ui-icon-time { background:  url(../images/icon-time.png) 50% 50% no-repeat;  background-size: 25px 26px; }
 
 .main-nav-btn-active {
-	border: 1px solid 		#155678;
-	background: 			#4596ce;
+	border: 1px solid #155678;
+	background: #85bf00;
 	font-weight: bold;
-	color: 					#fff;
+	color: #fff;
 	cursor: pointer;
 	text-shadow: 0 -1px 1px #145072;
 	text-decoration: none;
 	background-image: -moz-linear-gradient(
-							#85bae4,
-							#5393c5);
+							#85bf00,
+							#628c00);
 	background-image: -webkit-gradient(linear,left top,left bottom,
-		color-stop(0, 		#85bae4),
-		color-stop(1, 		#5393c5));
+		color-stop(0, #85bf00),
+		color-stop(1, #628c00));
   	-msfilter: "progid:DXImageTransform.Microsoft.gradient(startColorStr='#85bae4', EndColorStr='#5393c5')";
 }
 .main-nav-active a.ui-link-inherit {
-	color: 					#fff;
-}
-
-.main-nav-btn-active {
-    background: 			#4596ce;
+	color: #fff;
 }
 
 .align-right {
@@ -90,10 +86,6 @@ div.jGrowl div.jGrowl-notification {
 div.jGrowl.center {
     left: 0;
 	width: 100%;
-}
-
-div.jGrowl.center-below-header {
-
 }
 
 div.jGrowl div.jGrowl-progress {
